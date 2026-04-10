@@ -112,7 +112,7 @@ export function ListaReservas({
     e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const archivo = e.target.files?.[0];
-    if (!archivo) return;
+    if (!archivo) return false;
 
     if (archivo.type !== "application/pdf") {
       toast({
@@ -120,7 +120,7 @@ export function ListaReservas({
         description: "Solo se permiten archivos PDF",
         variant: "destructive",
       });
-      return;
+      return false;
     }
 
     if (archivo.size > 10 * 1024 * 1024) {
@@ -129,7 +129,7 @@ export function ListaReservas({
         description: "El archivo no puede superar 10 MB",
         variant: "destructive",
       });
-      return;
+      return false;
     }
 
     setArchivosSubidos((prev) => ({
@@ -632,7 +632,7 @@ export function ListaReservas({
                                   className="bg-red-600 text-white"
                                   disabled={isDeleting}
                                   onClick={async () => {
-                                    if (!toDeleteAttendee) return;
+                                    if (!toDeleteAttendee) return false;
                                     setIsDeleting(true);
                                     try {
                                       console.info(
@@ -686,7 +686,7 @@ export function ListaReservas({
                                   `¿Confirmas eliminar el evento "${reserva.titulo}"? Esta acción no se puede deshacer.`,
                                 )
                               )
-                                return;
+                                return false;
                               setIsDeleting(true);
                               try {
                                 const ok = await alEliminar(
