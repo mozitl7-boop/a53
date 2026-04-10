@@ -13,7 +13,7 @@ export async function GET(request: Request) {
     return Response.json({
       success: result?.success || false,
       provider: result?.provider,
-      messageId: result?.messageId,
+      messageId: (result as any)?.messageId || null,
       error: result?.error,
       timestamp: new Date().toISOString(),
     });

@@ -351,7 +351,7 @@ export function ListaReservas({
                 if (isFull && onlyWithAvailability) return false;
               }
 
-              return true;
+              return reserva;
             })
             .map((reserva) => {
               const isArchived = Boolean(reserva.archivado);
@@ -422,7 +422,7 @@ export function ListaReservas({
                 if (isFull && onlyWithAvailability) return false;
               }
 
-              return true;
+              return reserva;
             })
             .map((reserva, index) => {
               const esOrganizador =

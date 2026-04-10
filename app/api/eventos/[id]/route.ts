@@ -5,11 +5,13 @@ import supabaseAdmin from "@/lib/supabaseServer";
 /**
  * API DELETE /api/eventos/:id — eliminar evento (solo organizador)
  */
-export async function DELETE(request: Request, { params }: { params: any }) {
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    // `params` puede ser un objeto similar a una promesa en el enrutador de aplicaciones de Next; espere a que se complete.
-    const paramsObj = await params;
-    const id = paramsObj?.id;
+    // Esperar a que los parámetros se resuelvan
+    const { id } = await params;
     // Preferir usuario basado en sesión (cookie). Recurrir al encabezado/cuerpo para desarrollo.
     const body = await request.json().catch(() => ({} as any));
     const sessionUser = getUserFromRequest(request);
@@ -52,7 +54,7 @@ export async function DELETE(request: Request, { params }: { params: any }) {
       .select("id,id_organizador,organizador_id")
       .eq("id", id)
       .limit(1);
-    const row = (evtCols && evtCols[0]) || {};
+    const row = (evtCols && evtCols[0]) || ({} as any);
     const organizadorColumn = row.organizador_id ? "organizador_id" : "id_organizador";
 
     let attendeeEmails: string[] = [];
@@ -64,7 +66,7 @@ export async function DELETE(request: Request, { params }: { params: any }) {
         .select(`${organizadorColumn}`)
         .eq("id", id)
         .limit(1);
-      const orgId = organizadorRows && organizadorRows[0] && organizadorRows[0][organizadorColumn];
+      const orgId = organizadorRows && organizadorRows[0] && (organizadorRows[0] as any)[organizadorColumn];
       if (orgId) {
         const { data: urows } = await supabaseAdmin.from("usuarios").select("email").eq("id", orgId).limit(1);
         organizadorEmail = urows && urows[0] && urows[0].email ? urows[0].email : null;

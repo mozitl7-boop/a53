@@ -247,7 +247,7 @@ export default function Page() {
             }
           })(),
           carrera: e.carrera || null,
-          presentacion: null,
+          presentacion: undefined,
         };
 
         setReservas((prev) => {
@@ -589,7 +589,7 @@ export default function Page() {
               // Obtener el asiento asignado para el mensaje de confirmación
               const nuevo =
                 regs.find(
-                  (r) => r.email === (row.email || "") || r.id === row.id
+                  (r: any) => r.email === (row.email || "") || r.id === row.id
                 ) || regs[regs.length - 1];
               return {
                 exito: true,
@@ -741,7 +741,7 @@ export default function Page() {
                         alEliminar={eliminarReserva}
                         alEliminarAsistente={eliminarAsistente}
                         asistentesRegistrados={asistentesRegistrados}
-                        usuarioActualId={currentUserId}
+                        usuarioActualId={currentUserId || undefined}
                         modoUsuario={modoUsuario}
                       />
                     </Card>

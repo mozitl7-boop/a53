@@ -355,12 +355,12 @@ export async function POST(
     // Normalizar propiedades usando los nombres de columna detectados
     const mapped = {
       id: row.id,
-      eventoId: row[raEventoCol] || eventoId,
-      reservaId: row[raEventoCol] || eventoId,
+      eventoId: row[raEventoCol || 'evento_id'] || eventoId,
+      reservaId: row[raEventoCol || 'evento_id'] || eventoId,
       asistenteId: usuarioId,
       nombre: user.nombre,
       email: user.email,
-      asientoId: row[raAsientoCol] || null,
+      asientoId: row[raAsientoCol || 'id_asiento'] || null,
       numero_orden: row.numero_orden || null,
       numeroAsiento: row.numero_orden || null,
       fecha_registro: row.fecha_registro,
@@ -399,13 +399,13 @@ export async function POST(
 
       // Derive title with robust fallback
       const title =
-        (eventInfo && (eventInfo.titulo || eventInfo.title)) ||
+        (eventInfo && eventInfo.titulo) ||
         "Tu evento reservado";
 
       // fecha can be stored as 'fecha' or 'date'
-      const rawFecha = eventInfo && (eventInfo.fecha || eventInfo.date) ? String(eventInfo.fecha || eventInfo.date) : "";
+      const rawFecha = eventInfo && eventInfo.fecha ? String(eventInfo.fecha) : "";
       // hora can be 'hora_inicio' or 'start_time'
-      const rawHora = eventInfo && (eventInfo.hora_inicio || eventInfo.start_time) ? String(eventInfo.hora_inicio || eventInfo.start_time) : "";
+      const rawHora = eventInfo && eventInfo.hora_inicio ? String(eventInfo.hora_inicio) : "";
 
       const formatDateSpanish = (dateStr: any) => {
         if (!dateStr) return "";
@@ -441,8 +441,8 @@ export async function POST(
 
       const fechaFormato = formatDateSpanish(rawFecha) || "Por confirmar";
       const horaFormato = formatTimeSpanish(rawHora) || "Por confirmar";
-      const auditorioString = eventInfo && (eventInfo.auditorio || eventInfo.id_auditorio || eventInfo.auditorio_id) 
-        ? `Auditorio ${eventInfo.auditorio || eventInfo.id_auditorio || eventInfo.auditorio_id}`
+      const auditorioString = eventInfo && eventInfo.auditorio
+        ? `Auditorio ${eventInfo.auditorio}`
         : "Auditorio no especificado";
 
       const baseUrl =
@@ -514,7 +514,7 @@ export async function POST(
     }
     // Actualizar y emitir conteo agregado (asientos:conteo)
     try {
-      await computeAndBroadcastAsientosConteo((row && (row[raEventoCol] || row.evento_id || row.id_evento)) || eventoId);
+      await computeAndBroadcastAsientosConteo((row && (row[raEventoCol || 'evento_id'] || row.evento_id || row.id_evento)) || eventoId);
     } catch (e) {
       // No bloquear la respuesta si la actualización del conteo falla
       console.error("Error updating asientos:conteo after registro:", e);
@@ -677,7 +677,7 @@ export async function DELETE(
       }
     } catch (e) {
       console.error("Error deleting registro_asistente:", e);
-      return NextResponse.json({ success: false, error: e.message || String(e) }, { status: 500 });
+      return NextResponse.json({ success: false, error: (e as any).message || String(e) }, { status: 500 });
     }
 
     // Broadcast conteo update (fire-and-forget to avoid blocking response)

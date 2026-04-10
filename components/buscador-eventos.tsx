@@ -36,7 +36,7 @@ type PropiedadesBuscadorEventos = {
   alLimpiar: () => void;
 };
 
-export { FiltrosBusqueda, PropiedadesBuscadorEventos };
+export type { FiltrosBusqueda, PropiedadesBuscadorEventos };
 
 export function BuscadorEventos({
   alBuscar,

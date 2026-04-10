@@ -11,6 +11,7 @@ import {
   useForm,
   type UseFormProps,
   type FieldValues,
+  type DefaultValues,
   type SubmitHandler,
   Controller,
 } from "react-hook-form";
@@ -41,7 +42,7 @@ import { useToast } from "@/hooks/use-toast";
  */
 export function useValidatedForm<T extends FieldValues>(
   schema: ZodSchema,
-  defaultValues?: T
+  defaultValues?: DefaultValues<T>
 ) {
   return useForm<T>({
     resolver: zodResolver(schema),
@@ -216,7 +217,7 @@ export function FormSelect({
 interface FormWrapperProps<T extends FieldValues> {
   schema: ZodSchema;
   onSubmit: SubmitHandler<T>;
-  defaultValues?: T;
+  defaultValues?: DefaultValues<T>;
   children: ReactNode;
   submitLabel?: string;
   isLoading?: boolean;
@@ -300,7 +301,7 @@ export function createFormField<P extends { error?: string }>(
         control={control}
         render={({ field }) => (
           <Component
-            {...(props as P)}
+            {...(props as unknown as P)}
             {...field}
             error={errors[name]?.message as string | undefined}
           />

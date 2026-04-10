@@ -302,6 +302,7 @@ export async function POST(request: Request) {
       horaFin: (inserted.hora_fin || '').toString().substring(0,5),
       titulo: inserted.titulo,
       organizador: null,
+      organizador_email: null,
       organizadorId: inserted[organizadorColumn],
       descripcion: inserted.descripcion || '',
       asistentes: inserted.asistentes_esperados || 0,
