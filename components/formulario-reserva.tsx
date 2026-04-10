@@ -364,20 +364,27 @@ export function FormularioReserva({
     ? (Number.parseInt(datosFormulario.asistentes) / capacidadMaxima) * 100
     : 0;
 
+  const inputGlowClass =
+    datosFormulario.auditorio === "A"
+      ? "focus:border-orange-400 focus:ring-orange-400/40"
+      : "focus:border-purple-400 focus:ring-purple-400/40";
+
+  const fieldClass = `mt-2 rounded-3xl border border-white/10 bg-[#0d1b30] px-4 py-3 text-sm text-slate-100 placeholder:text-slate-500 shadow-lg shadow-black/10 outline-none transition duration-200 focus:border-2 focus:ring-2 ${inputGlowClass}`;
+
   return (
-    <Card className="p-6 sticky top-4 rounded-2xl shadow-xl bg-white/80 backdrop-blur-sm">
-      <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-gray-200">
-        <div className="p-2 bg-linear-to-br from-blue-500 to-cyan-500 rounded-lg shadow-md">
-          <CalendarIcon className="w-6 h-6 text-white" />
+    <Card className="p-5 sticky top-4 rounded-3xl shadow-2xl bg-white/5 border border-white/10 backdrop-blur-xl">
+      <div className="flex items-center gap-3 mb-5 pb-3 border-b border-white/10">
+        <div className="p-2 rounded-2xl bg-primary/10 text-primary">
+          <CalendarIcon className="w-5 h-5" />
         </div>
-        <h2 className="text-2xl font-semibold">Nueva Reserva</h2>
+        <h2 className="text-xl font-semibold text-foreground">Nueva Reserva</h2>
       </div>
 
-      <form onSubmit={manejarEnvio} className="space-y-5">
-        <p className="text-xs text-gray-500">
+      <form onSubmit={manejarEnvio} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <p className="md:col-span-2 text-xs text-gray-500">
           Nota: no necesitas presionar <strong>F5</strong>; la lista se actualizará automáticamente.
         </p>
-        <div>
+        <div className="md:col-span-2">
           <Label className="text-base font-semibold mb-3 block">
             Auditorio
           </Label>
@@ -390,10 +397,10 @@ export function FormularioReserva({
                   auditorio: "A",
                 })
               }
-              className={`p-4 rounded-xl transition-all font-semibold shadow-md hover:shadow-lg ${
+              className={`p-3 rounded-lg transition-all font-semibold border ${
                 datosFormulario.auditorio === "A"
-                  ? "bg-linear-to-b from-blue-500 to-blue-600 text-white scale-105"
-                  : "bg-white hover:bg-blue-50 border-2 border-gray-200"
+                  ? "bg-primary text-white border-primary"
+                  : "bg-card text-foreground border-border hover:bg-slate-700"
               }`}
             >
               <div className="text-center">
@@ -409,10 +416,10 @@ export function FormularioReserva({
                   auditorio: "B",
                 })
               }
-              className={`p-4 rounded-xl transition-all font-semibold shadow-md hover:shadow-lg ${
+              className={`p-3 rounded-lg transition-all font-semibold border ${
                 datosFormulario.auditorio === "B"
-                  ? "bg-linear-to-b from-purple-500 to-purple-600 text-white scale-105"
-                  : "bg-white hover:bg-purple-50 border-2 border-gray-200"
+                  ? "bg-primary text-white border-primary"
+                  : "bg-card text-foreground border-border hover:bg-slate-700"
               }`}
             >
               <div className="text-center">
@@ -438,7 +445,7 @@ export function FormularioReserva({
               })
             }
             min={obtenerFechaMinima()}
-            className="mt-2 rounded-lg shadow-sm"
+            className={fieldClass}
             required
           />
           <p className="text-xs text-gray-600 mt-1.5 flex items-center gap-1">
@@ -482,7 +489,7 @@ export function FormularioReserva({
             }
             min="07:00"
             max="16:00"
-            className="mt-1 rounded-lg shadow-sm"
+            className={fieldClass}
             required
           />
           <p className="text-xs text-gray-600 mt-1.5 flex items-center gap-1">
@@ -491,8 +498,8 @@ export function FormularioReserva({
           </p>
 
           {mostrarHorariosDisponibles && (
-            <div className="mt-3 p-4 bg-blue-50 rounded-xl shadow-sm">
-              <p className="text-sm font-semibold mb-3">
+            <div className="mt-3 p-4 bg-white/5 border border-white/10 rounded-2xl shadow-[0_30px_60px_-40px_rgba(0,0,0,0.65)] backdrop-blur-xl">
+              <p className="text-sm font-semibold mb-3 text-slate-100">
                 Horarios disponibles:
               </p>
               <div className="grid grid-cols-3 gap-2">
@@ -548,7 +555,7 @@ export function FormularioReserva({
               })
             }
             placeholder="Nombre del evento"
-            className="mt-2 rounded-lg shadow-sm"
+            className={fieldClass}
             required
           />
         </div>
@@ -569,7 +576,7 @@ export function FormularioReserva({
                   }
                 }}
               >
-                <SelectTrigger className="rounded-lg shadow-sm">
+                <SelectTrigger className={fieldClass}>
                   <SelectValue placeholder="Selecciona un organizador" />
                 </SelectTrigger>
                 <SelectContent>
@@ -597,7 +604,7 @@ export function FormularioReserva({
                       })
                     }
                     placeholder="Nombre del organizador"
-                    className="rounded-lg shadow-sm"
+                    className={fieldClass}
                     required
                   />
                   <Input
@@ -611,7 +618,7 @@ export function FormularioReserva({
                       })
                     }
                     placeholder="Email del organizador"
-                    className="rounded-lg shadow-sm"
+                    className={fieldClass}
                     required
                   />
                 </div>
@@ -629,7 +636,7 @@ export function FormularioReserva({
                   })
                 }
                 placeholder="Nombre del organizador"
-                className="rounded-lg shadow-sm"
+                className={fieldClass}
                 required
               />
               <Input
@@ -643,7 +650,7 @@ export function FormularioReserva({
                   })
                 }
                 placeholder="Email del organizador"
-                className="rounded-lg shadow-sm"
+                className={fieldClass}
                 required
               />
             </div>
@@ -671,7 +678,7 @@ export function FormularioReserva({
             placeholder="Número de personas"
             min="1"
             max={capacidadMaxima}
-            className="mt-2 rounded-lg shadow-sm"
+            className={fieldClass}
             required
           />
           {datosFormulario.asistentes && (
@@ -693,7 +700,7 @@ export function FormularioReserva({
                   className={`h-full transition-all duration-300 rounded-full ${
                     porcentajeCapacidad > 100
                       ? "bg-red-500"
-                      : "bg-linear-to-r from-green-500 to-green-600"
+                      : "bg-gradient-to-r from-green-500 to-green-600"
                   }`}
                   style={{ width: `${Math.min(porcentajeCapacidad, 100)}%` }}
                 />
@@ -726,7 +733,7 @@ export function FormularioReserva({
             }
             placeholder="Detalles adicionales del evento..."
             rows={3}
-            className="mt-2 resize-none rounded-lg shadow-sm"
+            className={`${fieldClass} mt-2 resize-none`}
           />
         </div>
 
@@ -741,7 +748,7 @@ export function FormularioReserva({
               establecerDatosFormulario({ ...datosFormulario, carrera: value })
             }
           >
-            <SelectTrigger className="mt-2 rounded-lg shadow-sm">
+            <SelectTrigger className={fieldClass}>
               <SelectValue placeholder="Selecciona una carrera" />
             </SelectTrigger>
             <SelectContent>
@@ -819,10 +826,10 @@ export function FormularioReserva({
 
         {datosFormulario.horaInicio && (
           <div
-            className={`flex items-center gap-3 p-4 rounded-xl transition-all font-medium shadow-md ${
+            className={`md:col-span-2 flex items-center gap-3 p-3 rounded-lg transition-all font-medium shadow-sm ${
               esHorarioDisponible(datosFormulario.horaInicio)
-                ? "bg-linear-to-r from-green-500 to-green-600 text-white"
-                : "bg-linear-to-r from-red-500 to-red-600 text-white"
+                ? "bg-emerald-500 text-white"
+                : "bg-red-500 text-white"
             }`}
           >
             {esHorarioDisponible(datosFormulario.horaInicio) ? (
@@ -851,7 +858,7 @@ export function FormularioReserva({
 
         <Button
           type="submit"
-          className="w-full h-12 text-base font-semibold rounded-xl shadow-lg bg-linear-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white transition-all hover:shadow-xl"
+          className="md:col-span-2 w-full h-11 text-sm font-semibold rounded-lg shadow-sm bg-primary text-white hover:bg-primary/90 transition-all"
         >
           Crear Reserva
         </Button>

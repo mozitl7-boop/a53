@@ -135,38 +135,9 @@ export function LoginUsuario({
   };
 
   return (
-    <div className="flex items-center justify-center min-h-[380px]">
-      <div className="w-[380px] bg-white rounded-xl shadow-lg p-6">
-        <div className="flex flex-col items-center mb-4">
-          <div className="w-14 h-14 bg-gradient-to-br from-blue-400 to-cyan-400 rounded-full flex items-center justify-center shadow-md mb-3">
-            <svg
-              width="28"
-              height="28"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M3 11C3 6.58172 6.58172 3 11 3H13C17.4183 3 21 6.58172 21 11V13C21 17.4183 17.4183 21 13 21H11C6.58172 21 3 17.4183 3 13V11Z"
-                fill="white"
-                opacity="0.12"
-              />
-              <path
-                d="M7 10.5C7 9.11929 8.11929 8 9.5 8H14.5C15.8807 8 17 9.11929 17 10.5V13.5C17 14.8807 15.8807 16 14.5 16H9.5C8.11929 16 7 14.8807 7 13.5V10.5Z"
-                stroke="white"
-                strokeWidth="1.2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </div>
-          <h1 className="text-2xl font-bold text-blue-600">
-            Sistema de Reservas - Auditorios del 53
-          </h1>
-          <p className="text-sm text-gray-500">Gestión de eventos y reservas</p>
-        </div>
-
-        <div className="bg-gray-100 rounded-full p-1 mb-5 flex gap-1">
+    <div className="flex items-center justify-center min-h-[420px] px-4">
+      <div className="w-full max-w-md bg-white/5 border border-white/10 rounded-3xl shadow-[0_30px_60px_rgba(0,0,0,0.45)] p-8 backdrop-blur-xl">
+        <div className="bg-[#152743] rounded-full p-1 mb-3 flex gap-1 border border-primary/30">
           <button
             onClick={() => {
               setTab("login");
@@ -175,7 +146,7 @@ export function LoginUsuario({
               setError(null);
             }}
             className={`flex-1 py-2 rounded-full text-sm font-medium ${
-              tab === "login" ? "bg-white shadow" : "text-gray-600"
+              tab === "login" ? "bg-primary text-black shadow" : "text-slate-300"
             }`}
           >
             <span className="inline-flex items-center gap-2 justify-center">
@@ -191,7 +162,7 @@ export function LoginUsuario({
               setError(null);
             }}
             className={`flex-1 py-2 rounded-full text-sm font-medium ${
-              tab === "register" ? "bg-white shadow" : "text-gray-600"
+              tab === "register" ? "bg-primary text-black shadow" : "text-slate-300"
             }`}
           >
             <span className="inline-flex items-center gap-2 justify-center">
@@ -204,15 +175,15 @@ export function LoginUsuario({
           <div>
             {linkSent ? (
               <>
-                <div className="bg-blue-50 border border-blue-200 rounded-md p-4 mb-4">
-                  <p className="text-sm text-blue-700">
+                <div className="bg-slate-900/75 border border-blue-500/20 rounded-2xl p-4 mb-4">
+                  <p className="text-sm text-slate-100">
                     ✓ Se ha enviado un enlace a tu correo. Por favor, revisa tu
-                    bandeja de entrada (y la carpeta de spam).
+                    bandeja de entrada.
                   </p>
                 </div>
                 <button
                   onClick={handleVerifyToken}
-                  className="w-full mt-2 bg-gray-600 text-white py-2 rounded-full text-sm"
+                  className="w-full mt-2 bg-slate-800 text-white py-2 rounded-2xl text-sm shadow-sm"
                 >
                   Ya tengo el enlace, ingresar token
                 </button>
@@ -225,24 +196,24 @@ export function LoginUsuario({
               </>
             ) : (
               <>
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-sm font-medium text-slate-300">
                   Correo electrónico
                 </label>
                 <input
-                  className="w-full mt-2 p-3 border rounded-md bg-gray-50"
+                  className="w-full mt-2 rounded-2xl border border-white/10 bg-[#0b1830] px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:border-primary focus:ring-2 focus:ring-primary/40 outline-none"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="correo@universidad.edu"
                 />
 
-                <p className="text-xs text-gray-500 mt-2 mb-4">
-                  Recibirás un enlace para acceder (sin contraseña).
+                <p className="text-xs text-slate-400 mt-2 mb-2">
+                  Recibirás un enlace para acceder directamente.
                 </p>
 
                 <button
                   onClick={submitLogin}
                   disabled={!email || loading}
-                  className="w-full mt-2 bg-blue-600 text-white py-3 rounded-full disabled:opacity-60"
+                  className="w-full mt-3 bg-gradient-to-r from-primary to-accent text-black py-3 rounded-2xl shadow-xl disabled:opacity-60 transition-all"
                 >
                   {loading ? "Enviando..." : "Enviar Enlace"}
                 </button>
@@ -276,31 +247,31 @@ export function LoginUsuario({
               </>
             ) : (
               <>
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-sm font-medium text-slate-300">
                   Nombre completo
                 </label>
                 <input
-                  className="w-full mt-2 p-3 border rounded-md bg-gray-50"
+                  className="w-full mt-2 rounded-2xl border border-white/10 bg-[#0b1830] px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:border-primary focus:ring-2 focus:ring-primary/40 outline-none"
                   value={nombre}
                   onChange={(e) => setNombre(e.target.value)}
                   placeholder="Juan Pérez"
                 />
 
-                <label className="block text-sm font-medium text-gray-700 mt-3">
+                <label className="block text-sm font-medium text-slate-300 mt-3">
                   Correo electrónico
                 </label>
                 <input
-                  className="w-full mt-2 p-3 border rounded-md bg-gray-50"
+                  className="w-full mt-2 rounded-2xl border border-white/10 bg-[#0b1830] px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:border-primary focus:ring-2 focus:ring-primary/40 outline-none"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="correo@universidad.edu"
                 />
 
-                <label className="block text-sm font-medium text-gray-700 mt-3">
+                <label className="block text-sm font-medium text-slate-300 mt-3">
                   Tipo de usuario
                 </label>
                 <select
-                  className="w-full mt-2 p-3 border rounded-md bg-white"
+                  className="w-full mt-2 rounded-2xl border border-white/10 bg-[#0b1830] px-4 py-3 text-sm text-white focus:border-primary focus:ring-2 focus:ring-primary/40 outline-none"
                   value={tipoUsuario}
                   onChange={(e) => setTipoUsuario(e.target.value)}
                 >
@@ -311,7 +282,7 @@ export function LoginUsuario({
                 <button
                   onClick={submitRegister}
                   disabled={!nombre || !email || loading}
-                  className="w-full mt-4 bg-blue-600 text-white py-3 rounded-full disabled:opacity-60"
+                  className="w-full mt-3 bg-gradient-to-r from-primary to-accent text-black py-3 rounded-2xl shadow-xl disabled:opacity-60 transition-all"
                 >
                   {loading ? "Creando cuenta..." : "Crear Cuenta"}
                 </button>

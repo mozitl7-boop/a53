@@ -82,7 +82,7 @@ export function BuscadorEventos({
     <Card className="p-6 rounded-2xl shadow-xl bg-white/80 backdrop-blur-sm">
       <form onSubmit={manejarBusqueda} className="space-y-4">
         <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 bg-linear-to-br from-blue-500 to-cyan-500 rounded-lg shadow-md">
+          <div className="p-2 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg shadow-md">
             <Search className="w-5 h-5 text-white" />
           </div>
           <h3 className="text-xl font-semibold">Buscar Eventos</h3>
@@ -113,7 +113,7 @@ export function BuscadorEventos({
           </div>
           <Button
             type="submit"
-            className="px-6 rounded-lg shadow-md bg-linear-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white"
+            className="px-6 rounded-lg shadow-md bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white"
           >
             Buscar
           </Button>

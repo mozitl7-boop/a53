@@ -264,7 +264,7 @@ export function VistaAsistente({
 
       <Card className="p-6 rounded-2xl shadow-xl bg-white/80 backdrop-blur-sm">
         <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-gray-200">
-          <div className="p-2 bg-linear-to-br from-purple-500 to-purple-600 rounded-lg shadow-md">
+          <div className="p-2 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg shadow-md">
             <UserPlus className="w-6 h-6 text-white" />
           </div>
           <div>
@@ -308,7 +308,7 @@ export function VistaAsistente({
               return (
                 <Card
                   key={evento.id}
-                  className="p-5 rounded-xl shadow-lg hover:shadow-xl transition-all bg-linear-to-br from-white to-gray-50"
+                  className="p-5 rounded-xl shadow-lg hover:shadow-xl transition-all bg-gradient-to-br from-white to-gray-50"
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div>
@@ -322,8 +322,8 @@ export function VistaAsistente({
                     <Badge
                       className={`${
                         evento.id_auditorio === 1
-                          ? "bg-linear-to-r from-blue-500 to-blue-600"
-                          : "bg-linear-to-r from-purple-500 to-purple-600"
+                          ? "bg-gradient-to-r from-blue-500 to-blue-600"
+                          : "bg-gradient-to-r from-purple-500 to-purple-600"
                       } text-white font-semibold px-3 py-1`}
                     >
                       Auditorio {evento.id_auditorio === 1 ? "A" : "B"}
@@ -377,8 +377,8 @@ export function VistaAsistente({
                       <div
                         className={`h-full transition-all duration-300 rounded-full ${
                           porcentajeOcupacion > 80
-                            ? "bg-linear-to-r from-orange-500 to-red-500"
-                            : "bg-linear-to-r from-green-500 to-green-600"
+                            ? "bg-gradient-to-r from-orange-500 to-red-500"
+                            : "bg-gradient-to-r from-green-500 to-green-600"
                         }`}
                         style={{ width: `${porcentajeOcupacion}%` }}
                       />
@@ -503,7 +503,7 @@ export function VistaAsistente({
       {misRegistros.length > 0 && (
         <Card className="p-6 rounded-2xl shadow-xl bg-white/80 backdrop-blur-sm">
           <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-gray-200">
-            <div className="p-2 bg-linear-to-br from-green-500 to-green-600 rounded-lg shadow-md">
+            <div className="p-2 bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow-md">
               <CheckCircle2 className="w-6 h-6 text-white" />
             </div>
             <div>
@@ -524,7 +524,7 @@ export function VistaAsistente({
               return (
                 <Card
                   key={registro.id}
-                  className="p-4 rounded-xl bg-linear-to-br from-green-50 to-white shadow-md"
+                  className="p-4 rounded-xl bg-gradient-to-br from-green-50 to-white shadow-md"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -547,7 +547,7 @@ export function VistaAsistente({
                       </div>
                     </div>
                     <div className="text-center">
-                      <div className="bg-linear-to-br from-green-500 to-green-600 text-white rounded-xl p-4 shadow-lg">
+                      <div className="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-xl p-4 shadow-lg">
                         <Armchair className="w-8 h-8 mx-auto mb-1" />
                         <p className="text-xs font-medium">Asiento</p>
                         <p className="text-3xl font-bold">

@@ -44,11 +44,12 @@ export function Calendario({
     const nuevaFecha = new Date(fechaSeleccionada);
     nuevaFecha.setDate(nuevaFecha.getDate() + dias);
 
-    // Validar que no vaya a una fecha menor que la fecha mínima
-    const fechaMinima = obtenerFechaMinima();
-    const fechaNuevaFormato = formatearFechaLocal(nuevaFecha);
+    // Permitir cambiar a días pasados (hasta hace un año) para mayor flexibilidad.
+    // Si necesita un rango específico, se puede ajustar aquí.
+    const limitePasado = new Date();
+    limitePasado.setFullYear(limitePasado.getFullYear() - 1);
 
-    if (fechaNuevaFormato >= fechaMinima) {
+    if (nuevaFecha >= limitePasado) {
       alCambiarFecha(nuevaFecha);
     }
   };
@@ -93,7 +94,7 @@ export function Calendario({
           <h2 className="text-xl font-semibold capitalize">
             {formatearFecha(fechaSeleccionada)}
             {esHoy && (
-              <span className="ml-2 text-sm bg-linear-to-r from-blue-500 to-cyan-500 text-white px-3 py-1 rounded-full shadow-md">
+              <span className="ml-2 text-sm bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-3 py-1 rounded-full shadow-md">
                 Hoy
               </span>
             )}
@@ -113,10 +114,10 @@ export function Calendario({
         <div className="min-w-[600px]">
           <div className="grid grid-cols-[100px_1fr_1fr] gap-3 mb-3">
             <div className="font-semibold text-sm text-gray-600">Hora</div>
-            <div className="font-semibold text-sm text-center bg-linear-to-b from-blue-500 to-blue-600 text-white py-3 rounded-lg shadow-md">
+            <div className="font-semibold text-sm text-center bg-orange-500 text-white py-2 rounded-lg shadow-sm">
               Auditorio A
             </div>
-            <div className="font-semibold text-sm text-center bg-linear-to-b from-purple-500 to-purple-600 text-white py-3 rounded-lg shadow-md">
+            <div className="font-semibold text-sm text-center bg-purple-500 text-white py-2 rounded-lg shadow-sm">
               Auditorio B
             </div>
           </div>
@@ -136,10 +137,10 @@ export function Calendario({
                   </div>
 
                   <div
-                    className={`min-h-[70px] rounded-lg p-2 transition-all ${
+                    className={`min-h-[55px] rounded-lg p-2 transition-all ${
                       reservasA.length > 0
-                        ? "bg-blue-50"
-                        : "bg-white hover:bg-blue-50/50 shadow-sm"
+                        ? "bg-orange-50"
+                        : "bg-white hover:bg-orange-50/50 shadow-sm"
                     }`}
                   >
                     {reservasA.length > 0 ? (
@@ -167,7 +168,7 @@ export function Calendario({
                   </div>
 
                   <div
-                    className={`min-h-[70px] rounded-lg p-2 transition-all ${
+                    className={`min-h-[55px] rounded-lg p-2 transition-all ${
                       reservasB.length > 0
                         ? "bg-purple-50"
                         : "bg-white hover:bg-purple-50/50 shadow-sm"

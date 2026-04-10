@@ -1,4 +1,4 @@
-# ✅ Checklist de Variables de Entorno - AudiTec
+# ✅ Checklist de Variables de Entorno - A53
 
 ## Variables Críticas (IMPRESCINDIBLES - Sin estas NO funciona)
 
@@ -9,14 +9,14 @@
 
 ### Autenticación
 - [ ] `AUTH_SECRET` - Secreto para firmar JWTs (o `JWT_SECRET` como fallback)
-- [ ] `NEXT_PUBLIC_APP_URL` - URL pública de la app (ej: https://auditec.netlify.app)
+- [ ] `NEXT_PUBLIC_APP_URL` - URL pública de la app (ej: https://a53.netlify.app)
 
 ### Email (Para enviar enlaces mágicos y notificaciones)
 **Elige UNO de estos dos sistemas:**
 
 #### Opción A: MailerSend (Recomendado)
 - [ ] `MAILERSEND_API_TOKEN` - Token API de MailerSend
-- [ ] `EMAIL_FROM` - Email remitente (ej: noreply@auditec.netlify.app)
+- [ ] `EMAIL_FROM` - Email remitente (ej: noreply@a53.netlify.app)
 
 #### Opción B: SMTP Fallback
 - [ ] `SMTP_HOST` - Servidor SMTP (ej: smtp.gmail.com)
@@ -95,11 +95,11 @@ SUPABASE_URL=https://xxxxx.supabase.co
 SUPABASE_ANON_KEY=eyJxxx...
 SUPABASE_SERVICE_ROLE_KEY=eyJxxx...
 AUTH_SECRET=tu-secreto-super-largo-y-aleatorio
-NEXT_PUBLIC_APP_URL=https://auditec.netlify.app
+NEXT_PUBLIC_APP_URL=https://a53.netlify.app
 
 # Para Email (MailerSend recomendado):
 MAILERSEND_API_TOKEN=tu-token-aqui
-EMAIL_FROM=noreply@auditec.netlify.app
+EMAIL_FROM=noreply@a53.netlify.app
 ```
 
 ### 3. Rebuild en Netlify

@@ -10,14 +10,14 @@ export function MenuSeleccionUsuario({
   alSeleccionar,
 }: MenuSeleccionUsuarioProps) {
   return (
-    <div className="min-h-screen bg-linear-to-br from-blue-50 via-white to-cyan-50 flex items-center justify-center p-4">
-      <div className="max-w-4xl w-full">
+    <div className="min-h-screen bg-gradient-to-br from-[#070f1e] via-[#0b1b35] to-[#0a101f] flex items-center justify-center p-6">
+      <div className="max-w-5xl w-full">
         <div className="text-center mb-12">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-linear-to-br from-blue-500 to-cyan-500 mb-6 shadow-2xl">
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-br from-blue-500 to-cyan-500 mb-6 shadow-2xl">
             <Building2 className="w-10 h-10 text-white" />
           </div>
-          <h1 className="text-5xl font-bold mb-4 bg-linear-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
-            Sistema de Reservas - Auditorios del 53
+          <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
+            A53 - Sistema de Reservas
           </h1>
           <p className="text-xl text-gray-600">
             Selecciona el tipo de usuario para continuar
@@ -28,12 +28,12 @@ export function MenuSeleccionUsuario({
           {/* Opción Organizador */}
           <button
             onClick={() => alSeleccionar("organizador")}
-            className="group relative bg-white rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border-2 border-transparent hover:border-blue-200"
+            className="group relative bg-[#0f1d3a]/90 text-white rounded-3xl p-8 shadow-[0_15px_30px_rgba(0,0,0,0.45)] hover:shadow-[0_15px_40px_rgba(0,0,0,0.55)] transition-all duration-300 hover:-translate-y-1 border-2 border-primary/30 hover:border-primary"
           >
-            <div className="absolute inset-0 bg-linear-to-br from-blue-500/5 to-cyan-500/5 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-cyan-500/5 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
 
             <div className="relative">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-linear-to-br from-blue-500 to-blue-600 mb-6 shadow-lg group-hover:scale-110 transition-transform">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 mb-6 shadow-lg group-hover:scale-110 transition-transform">
                 <Users className="w-8 h-8 text-white" />
               </div>
 
@@ -83,12 +83,12 @@ export function MenuSeleccionUsuario({
           {/* Opción Asistente */}
           <button
             onClick={() => alSeleccionar("asistente")}
-            className="group relative bg-white rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border-2 border-transparent hover:border-purple-200"
+            className="group relative bg-[#1f1435]/90 text-white rounded-3xl p-8 shadow-[0_15px_30px_rgba(0,0,0,0.45)] hover:shadow-[0_15px_40px_rgba(0,0,0,0.55)] transition-all duration-300 hover:-translate-y-1 border-2 border-secondary/30 hover:border-secondary"
           >
-            <div className="absolute inset-0 bg-linear-to-br from-purple-500/5 to-pink-500/5 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-pink-500/5 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
 
             <div className="relative">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-linear-to-br from-purple-500 to-purple-600 mb-6 shadow-lg group-hover:scale-110 transition-transform">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500 to-purple-600 mb-6 shadow-lg group-hover:scale-110 transition-transform">
                 <UserPlus className="w-8 h-8 text-white" />
               </div>
 

@@ -121,7 +121,7 @@ export default function DetallesAsientoPage() {
               {error || "No se encontraron los detalles"}
             </p>
             <Link href="/">
-              <Button className="w-full bg-linear-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white">
+              <Button className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white">
                 <Home className="w-4 h-4 mr-2" />
                 Volver al Inicio
               </Button>
@@ -175,7 +175,7 @@ export default function DetallesAsientoPage() {
                 </div>
 
                 {/* Asiento destacado */}
-                <div className="flex-shrink-0 bg-linear-to-br from-green-500 to-green-600 text-white rounded-xl p-8 shadow-xl text-center">
+                <div className="flex-shrink-0 bg-gradient-to-br from-green-500 to-green-600 text-white rounded-xl p-8 shadow-xl text-center">
                   <Armchair className="w-12 h-12 mx-auto mb-2" />
                   <p className="text-sm font-medium">Tu Asiento</p>
                   <p className="text-5xl font-bold">{detalles.numeroAsiento}</p>
@@ -252,7 +252,7 @@ export default function DetallesAsientoPage() {
             {/* Footer */}
             <div className="flex gap-3 pt-4 border-t">
               <Link href="/" className="flex-1">
-                <Button className="w-full bg-linear-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold rounded-lg">
+                <Button className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold rounded-lg">
                   <Home className="w-4 h-4 mr-2" />
                   Volver al Inicio
                 </Button>
