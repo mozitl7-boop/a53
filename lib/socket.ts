@@ -1,6 +1,6 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
-type Handler = (payload: any) => void;
+type Handler = (payload?: any) => void;
 
 let supabase: SupabaseClient | null = null;
 let isConnected = false;
