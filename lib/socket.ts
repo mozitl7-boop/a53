@@ -94,8 +94,8 @@ export function initSocket() {
       const channel = client
         .channel(`realtime:${table}`)
         .on(
-          "postgres_changes",
-          { event: op === "*" ? "*" : op, schema: "public", table },
+          "postgres_changes" as any,
+          { event: op === "*" ? "*" : op, schema: "public", table } as any,
           (payload: any) => {
             // call all handlers for this event
             const hs = eventHandlers.get(event);
@@ -142,14 +142,12 @@ export function initSocket() {
       }
     },
     emit(event: string, payload?: any) {
-      // support request_data to fetch initial dataset
       if (event === "request_data") {
         const client = ensureClient();
         if (!client) return;
         const requested = payload && payload.event ? payload.event : null;
         const { table } = mapEventToTable(requested || "");
         if (!table) return;
-        // fetch initial rows (limit 200)
         client
           .from(table)
           .select("*")
@@ -196,14 +194,12 @@ export function initSocket() {
 }
 
 export function getSocket() {
-  // return a minimal socket-like object with connected flag
   return {
     connected: isConnected,
   } as any;
 }
 
 export function disconnectSocket() {
-  // clear subscriptions and reset client
   subscriptions.forEach((v) => {
     try {
       v.channel.unsubscribe();
