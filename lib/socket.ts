@@ -142,16 +142,20 @@ export function initSocket() {
       }
     },
     emit(event: string, payload?: any) {
+      // support request_data to fetch initial dataset
       if (event === "request_data") {
         const client = ensureClient();
         if (!client) return;
         const requested = payload && payload.event ? payload.event : null;
         const { table } = mapEventToTable(requested || "");
         if (!table) return;
-        client
-          .from(table)
-          .select("*")
-          .limit(200)
+        // fetch initial rows (limit 200)
+        Promise.resolve(
+          client
+            .from(table)
+            .select("*")
+            .limit(200)
+        )
           .then((res: any) => {
             const rows = res.data || [];
             const hs = eventHandlers.get(requested || table);
@@ -194,12 +198,14 @@ export function initSocket() {
 }
 
 export function getSocket() {
+  // return a minimal socket-like object with connected flag
   return {
     connected: isConnected,
   } as any;
 }
 
 export function disconnectSocket() {
+  // clear subscriptions and reset client
   subscriptions.forEach((v) => {
     try {
       v.channel.unsubscribe();
