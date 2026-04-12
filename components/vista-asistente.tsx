@@ -147,7 +147,7 @@ export function VistaAsistente({
         ? servidor.capacidad
         : reserva.capacidad_total ||
           reserva.asistentes ||
-          obtenerCapacidadMaxima(reserva.auditorio);
+          obtenerCapacidadMaxima(reserva);
 
     return ocupadosServidor >= capacidadServidor;
   };
@@ -166,7 +166,7 @@ export function VistaAsistente({
     if (reserva.capacidad_total && reserva.capacidad_total > 0)
       return reserva.capacidad_total;
     if (reserva.asistentes && reserva.asistentes > 0) return reserva.asistentes;
-    return obtenerCapacidadMaxima(reserva.auditorio);
+    return obtenerCapacidadMaxima(reserva);
   };
 
   // Polling: periodically fetch conteo agregado desde el servidor para cada reserva mostrada
@@ -268,7 +268,7 @@ export function VistaAsistente({
               ? servidor.capacidad
               : reserva.capacidad_total ||
                 reserva.asistentes ||
-                obtenerCapacidadMaxima(reserva.auditorio);
+                obtenerCapacidadMaxima(reserva);
           const isFull = ocupados >= capacidad;
           if (isFull && !filtrosActivos.includeFull) return false;
         } catch (e) {
@@ -765,7 +765,7 @@ export function VistaAsistente({
                   const reserva = asistente
                     ? eventosActuales.find((r) => r.id === asistente.reservaId)
                     : null;
-                  if (!reserva) return null;
+                  if (!asistente || !reserva) return null;
 
                   return (
                     <Card className="w-full max-w-lg bg-card border-2 border-primary/60 rounded-xl shadow-2xl shadow-primary/30 max-h-[90vh] overflow-y-auto">

@@ -41,7 +41,7 @@ export function useRealtimeSync<T>(
       // Evitar logging excesivo en cada mensaje (dev only)
       try {
         // Si el estado es un array, intentamos agregar evitando duplicados
-        setData((prev: any) => {
+        setData((prev: T) => {
           if (Array.isArray(prev)) {
             try {
               const incoming = newData as any;
@@ -54,11 +54,11 @@ export function useRealtimeSync<T>(
             } catch (e) {
               // ignore
             }
-            return [...(prev as any[]), newData] as T;
+            return ([...(prev as any[]), newData] as unknown) as T;
           }
 
           // Para valores no-array, reemplazar directamente
-          return newData;
+          return newData as T;
         });
       } catch (e) {
         // ignore update errors

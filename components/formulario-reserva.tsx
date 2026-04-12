@@ -369,500 +369,286 @@ export function FormularioReserva({
       ? "focus:border-orange-400 focus:ring-orange-400/40"
       : "focus:border-purple-400 focus:ring-purple-400/40";
 
-  const fieldClass = `mt-2 rounded-3xl border border-white/10 bg-[#0d1b30] px-4 py-3 text-sm text-slate-100 placeholder:text-slate-500 shadow-lg shadow-black/10 outline-none transition duration-200 focus:border-2 focus:ring-2 ${inputGlowClass}`;
+  const fieldClass = `mt-2 rounded-2xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-slate-100 placeholder:text-slate-500 shadow-sm outline-none transition duration-200 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/30`;
 
   return (
-    <Card className="p-5 sticky top-4 rounded-3xl shadow-2xl bg-white/5 border border-white/10 backdrop-blur-xl">
-      <div className="flex items-center gap-3 mb-5 pb-3 border-b border-white/10">
-        <div className="p-2 rounded-2xl bg-primary/10 text-primary">
-          <CalendarIcon className="w-5 h-5" />
+    <Card className="sticky top-4 rounded-2xl shadow-[0_25px_50px_-30px_rgba(15,23,42,0.85)] bg-slate-950/95 border border-slate-700 flex flex-col max-h-[90vh] overflow-hidden">
+      <div className="flex items-center gap-4 p-5 border-b border-slate-700 shrink-0 bg-slate-950/95">
+        <div className="p-3 rounded-xl bg-cyan-500/20 text-cyan-300">
+          <CalendarIcon className="w-6 h-6" />
         </div>
-        <h2 className="text-xl font-semibold text-foreground">Nueva Reserva</h2>
+        <div>
+          <h2 className="text-2xl font-bold text-white tracking-tight">Nueva Reserva</h2>
+          <p className="text-sm text-slate-300">Gestión de espacios y eventos</p>
+        </div>
       </div>
-
-      <form onSubmit={manejarEnvio} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <p className="md:col-span-2 text-xs text-gray-500">
-          Nota: no necesitas presionar <strong>F5</strong>; la lista se actualizará automáticamente.
-        </p>
-        <div className="md:col-span-2">
-          <Label className="text-base font-semibold mb-3 block">
-            Auditorio
-          </Label>
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              type="button"
-              onClick={() =>
-                establecerDatosFormulario({
-                  ...datosFormulario,
-                  auditorio: "A",
-                })
-              }
-              className={`p-3 rounded-lg transition-all font-semibold border ${
-                datosFormulario.auditorio === "A"
-                  ? "bg-primary text-white border-primary"
-                  : "bg-card text-foreground border-border hover:bg-slate-700"
-              }`}
-            >
-              <div className="text-center">
-                <div className="text-3xl">A</div>
-                <div className="text-xs mt-1">168 personas</div>
-              </div>
-            </button>
-            <button
-              type="button"
-              onClick={() =>
-                establecerDatosFormulario({
-                  ...datosFormulario,
-                  auditorio: "B",
-                })
-              }
-              className={`p-3 rounded-lg transition-all font-semibold border ${
-                datosFormulario.auditorio === "B"
-                  ? "bg-primary text-white border-primary"
-                  : "bg-card text-foreground border-border hover:bg-slate-700"
-              }`}
-            >
-              <div className="text-center">
-                <div className="text-3xl">B</div>
-                <div className="text-xs mt-1">168 personas</div>
-              </div>
-            </button>
+      <div className="flex-1 overflow-y-auto p-5 scrollbar-custom">
+        <form id="reserva-form" onSubmit={manejarEnvio} className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          
+          {/* Selector de Auditorio */}
+          <div className="md:col-span-2">
+            <Label className="text-lg font-bold mb-4 block text-white">Auditorio</Label>
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                type="button"
+                onClick={() => establecerDatosFormulario({ ...datosFormulario, auditorio: "A" })}
+                className={`p-4 rounded-xl transition-all border-2 ${
+                  datosFormulario.auditorio === "A"
+                    ? "bg-orange-600/20 text-orange-100 border-orange-500/80 shadow-lg shadow-orange-500/20"
+                    : "bg-slate-900 text-slate-400 border-slate-700 hover:border-slate-600"
+                }`}
+              >
+                <div className="text-center">
+                  <div className="text-3xl font-black">A</div>
+                  <div className="text-xs uppercase tracking-widest mt-1">168 personas</div>
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => establecerDatosFormulario({ ...datosFormulario, auditorio: "B" })}
+                className={`p-4 rounded-xl transition-all border-2 ${
+                  datosFormulario.auditorio === "B"
+                    ? "bg-purple-600/20 text-purple-100 border-purple-500/80 shadow-lg shadow-purple-500/20"
+                    : "bg-slate-900 text-slate-400 border-slate-700 hover:border-slate-600"
+                }`}
+              >
+                <div className="text-center">
+                  <div className="text-3xl font-black">B</div>
+                  <div className="text-xs uppercase tracking-widest mt-1">168 personas</div>
+                </div>
+              </button>
+            </div>
           </div>
-        </div>
 
-        <div>
-          <Label htmlFor="fecha" className="text-base font-semibold">
-            Fecha
-          </Label>
-          <Input
-            id="fecha"
-            type="date"
-            value={datosFormulario.fecha}
-            onChange={(e) =>
-              establecerDatosFormulario({
-                ...datosFormulario,
-                fecha: e.target.value,
-              })
-            }
-            min={obtenerFechaMinima()}
-            className={fieldClass}
-            required
-          />
-          <p className="text-xs text-gray-600 mt-1.5 flex items-center gap-1">
-            <Clock className="w-3 h-3" />
-            Después de las 4:00 PM no se permiten reservas para el mismo día
-          </p>
-        </div>
-
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <Label
-              htmlFor="horaInicio"
-              className="text-base font-semibold flex items-center gap-2"
-            >
-              <Clock className="w-4 h-4" />
-              Hora
-            </Label>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() =>
-                establecerMostrarHorariosDisponibles(
-                  !mostrarHorariosDisponibles
-                )
-              }
-              className="text-xs h-auto py-1 px-3 rounded-lg font-medium hover:bg-blue-50"
-            >
-              {mostrarHorariosDisponibles ? "Ocultar" : "Ver horarios"}
-            </Button>
+          {/* Fecha y Hora - Inputs más grandes */}
+          <div className="space-y-2">
+            <Label htmlFor="fecha" className="text-base font-semibold text-white">Fecha del Evento</Label>
+            <Input
+              id="fecha"
+              type="date"
+              value={datosFormulario.fecha}
+              onChange={(e) => establecerDatosFormulario({ ...datosFormulario, fecha: e.target.value })}
+              min={obtenerFechaMinima()}
+              className={`${fieldClass} text-base h-12`}
+              required
+            />
           </div>
-          <Input
-            id="horaInicio"
-            type="time"
-            value={datosFormulario.horaInicio}
-            onChange={(e) =>
-              establecerDatosFormulario({
-                ...datosFormulario,
-                horaInicio: e.target.value,
-              })
-            }
-            min="07:00"
-            max="16:00"
-            className={fieldClass}
-            required
-          />
-          <p className="text-xs text-gray-600 mt-1.5 flex items-center gap-1">
-            <Clock className="w-3 h-3" />
-            Duración: 1 hora (7AM - 5PM)
-          </p>
 
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="horaInicio" className="text-base font-semibold flex items-center gap-2 text-white">
+                <Clock className="w-5 h-5" /> Horario
+              </Label>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => establecerMostrarHorariosDisponibles(!mostrarHorariosDisponibles)}
+                className="text-sm font-bold text-primary hover:bg-primary/10"
+              >
+                {mostrarHorariosDisponibles ? "Cerrar" : "Ver libres"}
+              </Button>
+            </div>
+            <Input
+              id="horaInicio"
+              type="time"
+              value={datosFormulario.horaInicio}
+              onChange={(e) => establecerDatosFormulario({ ...datosFormulario, horaInicio: e.target.value })}
+              className={`${fieldClass} text-base h-12`}
+              required
+            />
+          </div>
+
+          {/* Menú Desplegable de Horarios */}
           {mostrarHorariosDisponibles && (
-            <div className="mt-3 p-4 bg-white/5 border border-white/10 rounded-2xl shadow-[0_30px_60px_-40px_rgba(0,0,0,0.65)] backdrop-blur-xl">
-              <p className="text-sm font-semibold mb-3 text-slate-100">
-                Horarios disponibles:
-              </p>
-              <div className="grid grid-cols-3 gap-2">
+            <div className="md:col-span-2 p-4 bg-slate-900 border border-slate-700 rounded-xl animate-in zoom-in-95">
+              <div className="grid grid-cols-4 gap-2">
                 {obtenerHorariosDisponibles().map((ranura) => (
                   <Button
                     key={ranura}
                     type="button"
-                    variant={
-                      datosFormulario.horaInicio === ranura
-                        ? "default"
-                        : "outline"
-                    }
-                    size="sm"
-                    onClick={() =>
-                      establecerDatosFormulario({
-                        ...datosFormulario,
-                        horaInicio: ranura,
-                      })
-                    }
-                    className={`text-xs h-9 font-medium rounded-lg shadow-sm ${
-                      datosFormulario.horaInicio === ranura
-                        ? "bg-linear-to-b from-blue-500 to-blue-600 text-white"
-                        : "bg-white hover:bg-blue-100"
-                    }`}
+                    variant={datosFormulario.horaInicio === ranura ? "default" : "outline"}
+                    className="text-sm h-10 font-bold"
+                    onClick={() => {
+                      establecerDatosFormulario({ ...datosFormulario, horaInicio: ranura });
+                      establecerMostrarHorariosDisponibles(false);
+                    }}
                   >
                     {ranura}
                   </Button>
                 ))}
               </div>
-              {obtenerHorariosDisponibles().length === 0 && (
-                <div className="text-center py-4">
-                  <AlertCircle className="w-8 h-8 mx-auto mb-2 text-gray-400" />
-                  <p className="text-sm font-medium text-gray-600">
-                    No hay horarios disponibles
-                  </p>
-                </div>
-              )}
             </div>
           )}
-        </div>
 
-        <div>
-          <Label htmlFor="titulo" className="text-base font-semibold">
-            Título del Evento
-          </Label>
-          <Input
-            id="titulo"
-            value={datosFormulario.titulo}
-            onChange={(e) =>
-              establecerDatosFormulario({
-                ...datosFormulario,
-                titulo: e.target.value,
-              })
-            }
-            placeholder="Nombre del evento"
-            className={fieldClass}
-            required
-          />
-        </div>
+          <div className="md:col-span-2 space-y-2">
+            <Label htmlFor="titulo" className="text-base font-semibold text-white">Título del Evento</Label>
+            <Input
+              id="titulo"
+              value={datosFormulario.titulo}
+              onChange={(e) => establecerDatosFormulario({ ...datosFormulario, titulo: e.target.value })}
+              placeholder="Título descriptivo del evento"
+              className={`${fieldClass} text-base h-12`}
+              required
+            />
+          </div>
 
-        <div>
-          <Label className="text-base font-semibold">Organizador</Label>
-          {organizadores && organizadores.length > 0 ? (
-            <div className="mt-2">
-              <Select
-                value={organizadorId}
-                onValueChange={(val) => {
-                  if (val === "otro") {
-                    setOrganizadorId("");
-                    setOrganizadorLibre(true);
-                  } else {
-                    setOrganizadorId(val);
-                    setOrganizadorLibre(false);
-                  }
-                }}
-              >
-                <SelectTrigger className={fieldClass}>
-                  <SelectValue placeholder="Selecciona un organizador" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="otro">Otro (ingresar nombre)</SelectItem>
-                  {organizadores.map((o) => (
-                    <SelectItem key={o.id} value={o.id}>
-                      {o.nombre} — {o.email}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-gray-500 mt-1">
-                Selecciona un organizador existente o elige "Otro" para escribir
-                uno.
-              </p>
-              {organizadorLibre && (
-                <div className="mt-2 space-y-2">
-                  <Input
-                    id="organizador"
-                    value={datosFormulario.organizador}
-                    onChange={(e) =>
-                      establecerDatosFormulario({
-                        ...datosFormulario,
-                        organizador: e.target.value,
-                      })
-                    }
-                    placeholder="Nombre del organizador"
-                    className={fieldClass}
-                    required
-                  />
-                  <Input
-                    id="organizador_email"
-                    type="email"
-                    value={datosFormulario.organizador_email}
-                    onChange={(e) =>
-                      establecerDatosFormulario({
-                        ...datosFormulario,
-                        organizador_email: e.target.value,
-                      })
-                    }
-                    placeholder="Email del organizador"
-                    className={fieldClass}
-                    required
-                  />
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="mt-2 space-y-2">
-              <Input
-                id="organizador"
-                value={datosFormulario.organizador}
-                onChange={(e) =>
-                  establecerDatosFormulario({
-                    ...datosFormulario,
-                    organizador: e.target.value,
-                  })
-                }
-                placeholder="Nombre del organizador"
-                className={fieldClass}
-                required
-              />
-              <Input
-                id="organizador_email"
-                type="email"
-                value={datosFormulario.organizador_email}
-                onChange={(e) =>
-                  establecerDatosFormulario({
-                    ...datosFormulario,
-                    organizador_email: e.target.value,
-                  })
-                }
-                placeholder="Email del organizador"
-                className={fieldClass}
-                required
-              />
-            </div>
-          )}
-        </div>
-
-        <div>
-          <Label
-            htmlFor="asistentes"
-            className="text-base font-semibold flex items-center gap-2"
-          >
-            <Users className="w-4 h-4" />
-            Número de Asistentes
-          </Label>
-          <Input
-            id="asistentes"
-            type="number"
-            value={datosFormulario.asistentes}
-            onChange={(e) =>
-              establecerDatosFormulario({
-                ...datosFormulario,
-                asistentes: e.target.value,
-              })
-            }
-            placeholder="Número de personas"
-            min="1"
-            max={capacidadMaxima}
-            className={fieldClass}
-            required
-          />
-          {datosFormulario.asistentes && (
-            <div className="mt-3">
-              <div className="flex justify-between text-xs mb-1 font-medium text-gray-600">
-                <span>Capacidad</span>
-                <span
-                  className={
-                    porcentajeCapacidad > 100
-                      ? "text-red-600"
-                      : "text-green-600"
-                  }
-                >
-                  {datosFormulario.asistentes}/{capacidadMaxima}
-                </span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden shadow-inner">
-                <div
-                  className={`h-full transition-all duration-300 rounded-full ${
-                    porcentajeCapacidad > 100
-                      ? "bg-red-500"
-                      : "bg-gradient-to-r from-green-500 to-green-600"
-                  }`}
-                  style={{ width: `${Math.min(porcentajeCapacidad, 100)}%` }}
+          {/* Organizador */}
+          <div className="md:col-span-2 space-y-2">
+            <Label className="text-base font-semibold text-white">Responsable / Organizador</Label>
+            <Select
+              value={organizadorId}
+              onValueChange={(val) => {
+                if (val === "otro") { setOrganizadorId(""); setOrganizadorLibre(true); }
+                else { setOrganizadorId(val); setOrganizadorLibre(false); }
+              }}
+            >
+              <SelectTrigger className={`${fieldClass} text-base h-12`}>
+                <SelectValue placeholder="Seleccione un responsable" />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-900 border border-slate-700 text-slate-100">
+                <SelectItem value="otro">Ingreso manual...</SelectItem>
+                {organizadores.map((o) => (
+                  <SelectItem key={o.id} value={o.id}>{o.nombre}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            
+            {organizadorLibre && (
+              <div className="mt-4 space-y-3 p-4 bg-slate-900 rounded-xl border border-slate-700 animate-in slide-in-from-top-2">
+                <Input
+                  value={datosFormulario.organizador}
+                  onChange={(e) => establecerDatosFormulario({ ...datosFormulario, organizador: e.target.value })}
+                  placeholder="Nombre completo"
+                  className={`${fieldClass} text-base h-12`}
+                  required
+                />
+                <Input
+                  type="email"
+                  value={datosFormulario.organizador_email}
+                  onChange={(e) => establecerDatosFormulario({ ...datosFormulario, organizador_email: e.target.value })}
+                  placeholder="Correo institucional"
+                  className={`${fieldClass} text-base h-12`}
+                  required
                 />
               </div>
-              {porcentajeCapacidad > 100 && (
-                <div className="flex items-start gap-2 mt-2 text-xs font-medium bg-red-50 text-red-700 p-3 rounded-lg border border-red-200">
-                  <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
-                  <span>
-                    El número de asistentes excede la capacidad máxima del
-                    auditorio
-                  </span>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        <div>
-          <Label htmlFor="descripcion" className="text-base font-semibold">
-            Descripción
-          </Label>
-          <Textarea
-            id="descripcion"
-            value={datosFormulario.descripcion}
-            onChange={(e) =>
-              establecerDatosFormulario({
-                ...datosFormulario,
-                descripcion: e.target.value,
-              })
-            }
-            placeholder="Detalles adicionales del evento..."
-            rows={3}
-            className={`${fieldClass} mt-2 resize-none`}
-          />
-        </div>
-
-        <div>
-          <Label className="text-base font-semibold flex items-center gap-2">
-            <Users className="w-4 h-4" />
-            Carrera
-          </Label>
-          <Select
-            value={datosFormulario.carrera}
-            onValueChange={(value) =>
-              establecerDatosFormulario({ ...datosFormulario, carrera: value })
-            }
-          >
-            <SelectTrigger className={fieldClass}>
-              <SelectValue placeholder="Selecciona una carrera" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="no-especificado">Sin especificar</SelectItem>
-              <SelectItem value="electronica">
-                Ingeniería Electrónica
-              </SelectItem>
-              <SelectItem value="electrica">Ingeniería Eléctrica</SelectItem>
-              <SelectItem value="industrial">Ingeniería Industrial</SelectItem>
-              <SelectItem value="mecanica">Ingeniería Mecánica</SelectItem>
-              <SelectItem value="logistica">Ingeniería en Logística</SelectItem>
-              <SelectItem value="gestion">
-                Ingeniería en Gestión Empresarial
-              </SelectItem>
-              <SelectItem value="tic">Ingeniería en TIC</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div>
-          <Label
-            htmlFor="presentacion"
-            className="text-base font-semibold flex items-center gap-2"
-          >
-            <FileText className="w-4 h-4" />
-            Adjuntar Presentación (PDF)
-          </Label>
-          <div className="mt-2 relative">
-            <input
-              id="presentacion"
-              type="file"
-              accept="application/pdf"
-              onChange={(e) => {
-                const archivo = e.target.files?.[0];
-                if (archivo) {
-                  if (archivo.type !== "application/pdf") {
-                    toast({
-                      title: "Error",
-                      description: "Solo se permiten archivos PDF",
-                      variant: "destructive",
-                    });
-                    return;
-                  }
-                  if (archivo.size > 10 * 1024 * 1024) {
-                    toast({
-                      title: "Error",
-                      description: "El archivo no puede superar 10 MB",
-                      variant: "destructive",
-                    });
-                    return;
-                  }
-                  establecerDatosFormulario({
-                    ...datosFormulario,
-                    presentacion: archivo.name,
-                  });
-                  toast({
-                    title: "Archivo seleccionado",
-                    description: `${archivo.name} se ha adjuntado exitosamente`,
-                  });
-                }
-              }}
-              className="hidden"
-            />
-            <label
-              htmlFor="presentacion"
-              className="cursor-pointer inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-200"
-            >
-              <Upload className="w-4 h-4" />
-              {datosFormulario.presentacion
-                ? datosFormulario.presentacion
-                : "Seleccionar archivo"}
-            </label>
-          </div>
-        </div>
-
-        {datosFormulario.horaInicio && (
-          <div
-            className={`md:col-span-2 flex items-center gap-3 p-3 rounded-lg transition-all font-medium shadow-sm ${
-              esHorarioDisponible(datosFormulario.horaInicio)
-                ? "bg-emerald-500 text-white"
-                : "bg-red-500 text-white"
-            }`}
-          >
-            {esHorarioDisponible(datosFormulario.horaInicio) ? (
-              <>
-                <CheckCircle2 className="w-5 h-5 shrink-0" />
-                <div>
-                  <p className="font-semibold">Horario Disponible</p>
-                  <p className="text-xs text-white/90">
-                    Puedes reservar este horario
-                  </p>
-                </div>
-              </>
-            ) : (
-              <>
-                <AlertCircle className="w-5 h-5 shrink-0" />
-                <div>
-                  <p className="font-semibold">Horario No Disponible</p>
-                  <p className="text-xs text-white/90">
-                    Por favor elige otro horario
-                  </p>
-                </div>
-              </>
             )}
           </div>
-        )}
 
+          {/* Asistentes con Barra de Animación */}
+          <div className="md:col-span-2 space-y-2">
+            <Label htmlFor="asistentes" className="text-base font-semibold flex items-center gap-2 text-white">
+              <Users className="w-5 h-5" /> Número de Asistentes
+            </Label>
+            <Input
+              id="asistentes"
+              type="number"
+              value={datosFormulario.asistentes}
+              onChange={(e) => establecerDatosFormulario({ ...datosFormulario, asistentes: e.target.value })}
+              max={capacidadMaxima}
+              className={`${fieldClass} text-base h-12`}
+              required
+            />
+            {datosFormulario.asistentes && (
+              <div className="mt-4 p-4 bg-slate-900 rounded-xl border border-slate-700">
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="text-slate-400 font-medium">Ocupación del Auditorio</span>
+                  <span className={`font-bold ${porcentajeCapacidad > 100 ? "text-red-400" : "text-primary text-lg"}`}>
+                    {datosFormulario.asistentes} / {capacidadMaxima}
+                  </span>
+                </div>
+                <div className="w-full bg-slate-800 rounded-full h-3 overflow-hidden shadow-inner">
+                  <div
+                    className={`h-full transition-all duration-1000 ease-out rounded-full ${
+                      porcentajeCapacidad > 100 ? "bg-red-500" : "bg-linear-to-r from-emerald-500 to-emerald-400"
+                    }`}
+                    style={{ width: `${Math.min(porcentajeCapacidad, 100)}%` }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-base font-semibold text-white">
+              Carrera Académica
+            </Label>
+            <Select
+              value={datosFormulario.carrera}
+              onValueChange={(value) => establecerDatosFormulario({ ...datosFormulario, carrera: value })}
+            >
+              <SelectTrigger className={`${fieldClass} text-base h-12 w-full`}>
+                <SelectValue placeholder="Seleccionar carrera" />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-900 border border-slate-700 text-slate-100">
+                <SelectItem value="no-especificado">General / Externo</SelectItem>
+                <SelectItem value="tic">Ingeniería en TIC</SelectItem>
+                <SelectItem value="electronica">Ingeniería Electrónica</SelectItem>
+                <SelectItem value="industrial">Ingeniería Industrial</SelectItem>
+                <SelectItem value="gestion">Gestión Empresarial</SelectItem>
+                <SelectItem value="mecanica">Ingeniería Mecánica</SelectItem>
+                <SelectItem value="electrica">Ingeniería Eléctrica</SelectItem>
+                <SelectItem value="logistica">Ingeniería en Logística</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Columna: Material (PDF) */}
+          <div className="space-y-2">
+            <Label className="text-base font-semibold text-white flex items-center gap-2">
+              <FileText className="w-5 h-5" /> Material (PDF)
+            </Label>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => document.getElementById('presentacion')?.click()}
+                className="w-full h-12 border-dashed border-2 bg-transparent hover:bg-white/5 text-white flex items-center justify-center"
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                <span className="truncate">
+                  {datosFormulario.presentacion || "Subir PDF"}
+                </span>
+              </Button>
+              <input
+                id="presentacion"
+                type="file"
+                accept="application/pdf"
+                className="hidden"
+                onChange={(e) => {
+                  const archivo = e.target.files?.[0];
+                  if (archivo && archivo.type === "application/pdf") {
+                    establecerDatosFormulario({ ...datosFormulario, presentacion: archivo.name });
+                  }
+                }}
+              />
+            </div>
+          </div>
+        </form>
+      </div>
+
+      {/* FOOTER FIJO */}
+      <div className="p-5 border-t border-slate-700 bg-slate-950/95 shrink-0">
+        {datosFormulario.horaInicio && (
+          <div className={`mb-4 flex items-center gap-3 p-4 rounded-xl text-sm font-bold border ${
+            esHorarioDisponible(datosFormulario.horaInicio) 
+              ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/50" 
+              : "bg-red-500/20 text-red-300 border-red-500/50"
+          }`}>
+            {esHorarioDisponible(datosFormulario.horaInicio) ? <CheckCircle2 className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
+            <span>{esHorarioDisponible(datosFormulario.horaInicio) ? "HORARIO DISPONIBLE" : "HORARIO NO DISPONIBLE"}</span>
+          </div>
+        )}
+        
         <Button
+          form="reserva-form"
           type="submit"
-          className="md:col-span-2 w-full h-11 text-sm font-semibold rounded-lg shadow-sm bg-primary text-white hover:bg-primary/90 transition-all"
+          disabled={enviando || !esHorarioDisponible(datosFormulario.horaInicio)}
+          className="w-full h-14 text-lg font-black rounded-xl bg-cyan-500 text-slate-950 hover:bg-cyan-400 shadow-lg shadow-cyan-500/30 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Crear Reserva
+          {enviando ? "PROCESANDO..." : "CONFIRMAR RESERVACIÓN"}
         </Button>
-      </form>
+      </div>
     </Card>
   );
 }

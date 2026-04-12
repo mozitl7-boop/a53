@@ -8,9 +8,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "A53 - Sistema de Reservas",
-  description: "Plataforma de gestión y reserva de auditorios A53",
-  generator: "v0.app",
-};
+  description: "Plataforma de gestión y reserva de auditorios A53"};
 
 export default function RootLayout({
   children,

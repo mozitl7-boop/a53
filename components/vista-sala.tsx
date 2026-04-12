@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { Badge } from "@/components/ui/badge";
 
 type Asiento = {
   asientoId: string;
@@ -77,12 +78,18 @@ export function VistaSala({ eventoId }: { eventoId: string }) {
     : asistentesFlat;
 
   return (
-    <div className="space-y-6">
-      <div className="rounded-2xl border border-primary/30 bg-card/95 p-4 shadow-xl shadow-primary/20">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-          <h3 className="text-lg font-bold text-foreground">Sala del evento</h3>
-          <span className="text-xs text-muted-foreground">Evento: {eventoId}</span>
-          <span className="ml-auto text-xs font-semibold text-accent">{grid.length} filas</span>
+    <div className="space-y-5">
+      <div className="rounded-2xl border border-slate-700 bg-slate-950/95 p-5 shadow-lg">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-4">
+          <div>
+            <h3 className="text-2xl font-bold text-white">Sala del Evento</h3>
+            <p className="text-xs text-slate-300 mt-1">Evento: {eventoId}</p>
+          </div>
+          <div className="ml-auto">
+            <Badge className="bg-blue-500/20 text-blue-200 px-3 py-1 text-xs font-semibold">
+              {grid.length} filas
+            </Badge>
+          </div>
         </div>
 
         <div className="mt-4">
@@ -90,17 +97,17 @@ export function VistaSala({ eventoId }: { eventoId: string }) {
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
             placeholder="Buscar por nombre o email..."
-            className="w-full rounded-lg border border-primary/40 bg-[#111b31] px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground transition focus:border-accent focus:ring-2 focus:ring-accent/30"
+            className="w-full rounded-lg border border-slate-700 bg-slate-900 px-4 py-2.5 text-sm text-slate-100 placeholder:text-slate-400 transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/30"
           />
         </div>
       </div>
 
-      <div className="max-h-[45vh] overflow-auto rounded-2xl border border-[var(--border)] bg-background p-4">
-        <div className="space-y-5">
+      <div className="max-h-[50vh] overflow-auto rounded-2xl border border-slate-700 bg-slate-950/95 p-5 shadow-lg">
+        <div className="space-y-6">
           {grid.map((fila) => (
             <div key={fila.fila}>
-              <h4 className="font-semibold text-base text-foreground mb-2">Fila: {fila.fila || "-"}</h4>
-              <div className="flex flex-wrap gap-2 max-w-full">
+              <h4 className="font-bold text-lg text-white mb-3">Fila: {fila.fila || "-"}</h4>
+              <div className="flex flex-wrap gap-3 max-w-full">
                 {fila.seats.map((s) => {
                   const isMatch =
                     !filter ||
@@ -111,10 +118,10 @@ export function VistaSala({ eventoId }: { eventoId: string }) {
                   return (
                     <div
                       key={s.asientoId}
-                      className={`w-28 md:w-32 p-2 rounded-xl border shadow-md flex flex-col items-start gap-1 transition-all duration-200 ${
+                      className={`w-32 md:w-36 p-3 rounded-xl border shadow-md flex flex-col items-start gap-2 transition-all duration-200 ${
                         s.ocupado
-                          ? "bg-[#2c1015] border-red-500/80"
-                          : "bg-[#0f2a23] border-emerald-500/80"
+                          ? "bg-red-600/20 border-red-500/80"
+                          : "bg-emerald-600/20 border-emerald-500/80"
                       } ${isMatch ? "opacity-100" : "opacity-40"}`}
                       title={
                         s.asistente
@@ -122,24 +129,24 @@ export function VistaSala({ eventoId }: { eventoId: string }) {
                           : "Libre"
                       }
                     >
-                      <div className="text-sm font-medium">
+                      <div className="text-sm font-bold text-white">
                         Asiento {s.numero_asiento}
                       </div>
-                      <div className="text-xs text-gray-600">
+                      <div className="text-xs text-slate-300">
                         Sección: {s.seccion || "-"}
                       </div>
-                      <div className="text-xs text-gray-700">
+                      <div className="text-xs">
                         {s.ocupado ? (
                           <>
-                            <div className="font-medium">
+                            <div className="font-semibold text-white">
                               {s.asistente?.nombre || "-"}
                             </div>
-                            <div className="text-xs text-gray-500">
+                            <div className="text-xs text-slate-300 mt-1">
                               {s.asistente?.email || ""}
                             </div>
                           </>
                         ) : (
-                          <div className="text-sm text-green-700">Libre</div>
+                          <div className="text-sm font-medium text-emerald-300">Libre</div>
                         )}
                       </div>
                     </div>
@@ -151,32 +158,36 @@ export function VistaSala({ eventoId }: { eventoId: string }) {
         </div>
       </div>
 
-      <div className="mt-6 rounded-xl border border-primary/30 bg-card/90 p-4">
-        <div className="mb-3 flex items-center justify-between">
-          <h5 className="text-base font-semibold text-foreground">
-            Resultados encontrados: {filteredAsistentes.length}
-          </h5>
-          <span className="text-xs text-muted-foreground">
-            Solo los asistentes que coinciden con tu búsqueda
-          </span>
+      <div className="rounded-2xl border border-slate-700 bg-slate-950/95 p-5 shadow-lg">
+        <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div>
+            <h5 className="text-xl font-bold text-white">
+              Asistentes Encontrados
+            </h5>
+            <p className="text-xs text-slate-300 mt-1">
+              Total: {filteredAsistentes.length}
+            </p>
+          </div>
         </div>
-        <div className="max-h-40 overflow-auto rounded-lg border border-primary/40 bg-[#0b172b] p-2">
+        <div className="max-h-48 overflow-auto rounded-lg border border-slate-700 bg-slate-900/50 p-3">
           {filteredAsistentes.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No se encontraron coincidencias.</p>
+            <p className="text-sm text-slate-300">No se encontraron coincidencias.</p>
           ) : (
-            filteredAsistentes.map((f) => (
-              <div
-                key={f.asiento.asientoId}
-                className="py-2 border-b last:border-b-0"
-              >
-                <div className="text-sm font-medium text-foreground">
-                  Asiento {f.asiento.numero_asiento} — Fila {f.fila}
+            <div className="space-y-2.5">
+              {filteredAsistentes.map((f) => (
+                <div
+                  key={f.asiento.asientoId}
+                  className="py-3 px-2.5 border-b border-slate-800 last:border-b-0 hover:bg-slate-800/40 rounded transition-colors"
+                >
+                  <div className="text-sm font-semibold text-white">
+                    Asiento {f.asiento.numero_asiento} — Fila {f.fila}
+                  </div>
+                  <div className="text-xs text-slate-300 mt-1">
+                    {f.asiento.asistente?.nombre || "(vacío)"} — {f.asiento.asistente?.email || "N/A"}
+                  </div>
                 </div>
-                <div className="text-xs text-muted-foreground">
-                  {f.asiento.asistente?.nombre || "(vacío)"} — {f.asiento.asistente?.email || "N/A"}
-                </div>
-              </div>
-            ))
+              ))}
+            </div>
           )}
         </div>
       </div>

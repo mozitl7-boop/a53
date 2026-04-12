@@ -3,6 +3,8 @@
 import { useState, useCallback, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { initSocket } from "@/lib/socket";
+import { Button } from "@/components/ui/button";
+import { LogOut } from "lucide-react";
 import { FormularioReserva } from "@/components/formulario-reserva";
 import { Calendario } from "@/components/vista-calendario";
 import { ListaReservas } from "@/components/lista-reservas";
@@ -37,6 +39,8 @@ export type Reserva = {
   organizadorId?: string;
   descripcion: string;
   asistentes: number;
+  asistentes_registrados?: number;
+  capacidad_total?: number;
   archivado?: boolean;
   carrera?: string;
   presentacion?: string;
@@ -631,155 +635,119 @@ export default function Page() {
 
   if (modoUsuario === null) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center px-4">
-        <div className="w-full max-w-2xl">
-          {/* Hero Section */}
-          <div className="text-center mb-8">
-            <div className="mb-4 flex justify-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center shadow-lg">
-                <CalendarIcon className="w-8 h-8 text-white" />
+      <div className="min-h-screen bg-[#020617] flex items-center justify-center px-4 overflow-hidden">
+        {/* Luces de fondo decorativas */}
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/10 blur-[120px] rounded-full" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-500/10 blur-[120px] rounded-full" />
+        
+        <div className="w-full max-w-xl relative z-10">
+          <div className="text-center mb-10">
+            <div className="mb-6 flex justify-center">
+              <div className="w-20 h-20 bg-gradient-to-br from-primary to-orange-600 rounded-3xl flex items-center justify-center shadow-2xl rotate-3">
+                <CalendarIcon className="w-10 h-10 text-white" />
               </div>
             </div>
-            <p className="text-xs uppercase tracking-[0.35em] text-primary/70">
-              Reservas
-            </p>
-            <h1 className="mt-4 text-5xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-lime-300 to-cyan-300 mb-2">
-              A53
+            <h1 className="text-6xl font-black tracking-tighter text-white mb-4">
+              A<span className="text-cyan-400">53</span>
             </h1>
-            <p className="text-lg text-muted-foreground">
-              Tu plataforma moderna para gestionar reservas de auditorios de forma eficiente
+            <p className="text-xl text-slate-400 font-medium">
+              Gestión de auditorios del 53 
             </p>
           </div>
 
-          {/* Login Component Wrapped in Card */}
-          <Card className="p-6 border border-white/10 bg-slate-950/70 shadow-2xl backdrop-blur-xl rounded-3xl">
+          <Card className="p-8 border border-white/10 bg-[#0d1425]/60 shadow-3xl backdrop-blur-2xl rounded-[2.5rem]">
             <LoginUsuario
               onSelect={(user) => {
-                // Configurar el modo según el tipo de usuario
-                if (user.tipo_usuario === "organizador") {
-                  setUserIds((prev) => ({
-                    ...prev,
-                    organizador: String(user.id),
-                  }));
-                  setModoUsuario("organizador");
-                } else if (user.tipo_usuario === "asistente") {
-                  setUserIds((prev) => ({ ...prev, asistente: String(user.id) }));
-                  setModoUsuario("asistente");
-                } else if (user.tipo_usuario === "admin") {
-                  // los administradores ven la interfaz de organizador
-                  setUserIds((prev) => ({
-                    ...prev,
-                    organizador: String(user.id),
-                  }));
-                  setModoUsuario("organizador");
-                } else {
-                  // fallback a asistente
-                  setUserIds((prev) => ({ ...prev, asistente: String(user.id) }));
-                  setModoUsuario("asistente");
-                }
+                const tipo = user.tipo_usuario;
+                setUserIds(prev => ({ ...prev, [tipo === 'asistente' ? 'asistente' : 'organizador']: String(user.id) }));
+                setModoUsuario(tipo === "admin" ? "organizador" : (tipo as any));
               }}
             />
           </Card>
-
-          {/* Footer Info */}
-          <div className="mt-6 text-center text-xs text-muted-foreground">
-            <p>Elige tu rol para continuar · Acceso seguro y rápido</p>
-          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background text-slate-200">
-      <main className="min-h-screen">
-        <div className="mx-auto max-w-[1600px] px-6 py-8">
-          <section className="mb-6">
-            <EstadoAuditorio
-              reservas={reservas}
-              fechaSeleccionada={fechaSeleccionada}
-              asistentesRegistrados={asistentesRegistrados}
-              asientosConteo={asientosConteo}
-            />
-          </section>
+    <div className="min-h-screen bg-[#020617] text-slate-200 font-sans selection:bg-primary/30">
+      {/* NAVBAR SIMPLE */}
+      <main className="mx-auto max-w-[1700px] px-6 py-8">
+        {/* DASHBOARD HEADER */}
+        <section className="mb-10"> 
+          <EstadoAuditorio
+            reservas={reservas}
+            fechaSeleccionada={fechaSeleccionada}
+            asistentesRegistrados={asistentesRegistrados}
+            asientosConteo={asientosConteo}
+          />
+        </section>
 
-          {modoUsuario === "organizador" ? (
-            <div className="grid xl:grid-cols-[1.8fr_0.95fr] gap-6">
-              <section>
-                <Tabs defaultValue="calendario" className="w-full">
-                  <TabsList className="grid w-full grid-cols-2 mb-4 bg-muted/50 rounded-3xl p-1 gap-1">
-                    <TabsTrigger
-                      value="calendario"
-                      className="flex items-center justify-center gap-2 py-3 data-[state=active]:bg-white/10 data-[state=active]:text-white rounded-2xl font-medium text-sm text-slate-300"
-                    >
-                      <CalendarIcon className="w-4 h-4" />
-                      Calendario
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="lista"
-                      className="flex items-center justify-center gap-2 py-3 data-[state=active]:bg-white/10 data-[state=active]:text-white rounded-2xl font-medium text-sm text-slate-300"
-                    >
-                      <List className="w-4 h-4" />
-                      Lista
-                    </TabsTrigger>
-                  </TabsList>
+        {modoUsuario === "organizador" ? (
+          <div className="grid xl:grid-cols-[1fr_450px] gap-10 items-start">
+            {/* COLUMNA IZQUIERDA: CALENDARIO Y LISTA */}
+            <section className="space-y-6">
+              <Tabs defaultValue="calendario" className="w-full">
+                <TabsList className="inline-flex h-14 items-center justify-center rounded-2xl bg-slate-900/50 p-1.5 text-slate-400 border border-slate-700 mb-6">
+                  <TabsTrigger
+                    value="calendario"
+                    className="inline-flex items-center justify-center whitespace-nowrap rounded-xl px-8 py-2.5 text-sm font-bold transition-all data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-100 data-[state=active]:shadow-sm gap-2"
+                  >
+                    <CalendarIcon className="w-4 h-4" />
+                    Vista de Calendario
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="lista"
+                    className="inline-flex items-center justify-center whitespace-nowrap rounded-xl px-8 py-2.5 text-sm font-bold transition-all data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-100 data-[state=active]:shadow-sm gap-2"
+                  >
+                    <List className="w-4 h-4" />
+                    Lista de Eventos
+                  </TabsTrigger>
+                </TabsList>
 
-                  <TabsContent value="calendario" className="mt-0">
-                    <Card className="p-0 border border-white/10 bg-white/5 backdrop-blur-xl shadow-2xl">
-                      <Calendario
-                        reservas={reservas}
-                        fechaSeleccionada={fechaSeleccionada}
-                        alCambiarFecha={setFechaSeleccionada}
-                      />
-                    </Card>
-                  </TabsContent>
-
-                  <TabsContent value="lista" className="mt-0">
-                    <Card className="p-4 border border-white/10 bg-white/5 backdrop-blur-xl shadow-2xl">
-                      <ListaReservas
-                        reservas={reservas}
-                        alEliminar={eliminarReserva}
-                        alEliminarAsistente={eliminarAsistente}
-                        asistentesRegistrados={asistentesRegistrados}
-                        usuarioActualId={currentUserId || undefined}
-                        modoUsuario={modoUsuario}
-                      />
-                    </Card>
-                  </TabsContent>
-                </Tabs>
-              </section>
-
-              <aside className="h-fit">
-                <Card className="p-5 border border-white/10 bg-white/5 backdrop-blur-xl shadow-2xl">
-                  <div className="mb-5 pb-3 border-b border-white/10">
-                    <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
-                      Panel
-                    </p>
-                    <h2 className="mt-3 text-2xl font-semibold text-white">
-                      Nueva Reserva
-                    </h2>
-                    <p className="mt-2 text-sm text-slate-400">
-                      Completa el formulario y crea tu evento en segundos.
-                    </p>
+                <TabsContent value="calendario" className="mt-0 outline-none">
+                  <div className="rounded-2xl border border-slate-700 bg-slate-950/95 overflow-hidden shadow-[0_25px_50px_-30px_rgba(15,23,42,0.85)]">
+                    <Calendario
+                      reservas={reservas}
+                      fechaSeleccionada={fechaSeleccionada}
+                      alCambiarFecha={setFechaSeleccionada}
+                    />
                   </div>
-                  <FormularioReserva
-                    alEnviar={agregarReserva}
-                    reservas={reservas}
-                    fechaSeleccionada={fechaSeleccionada}
-                  />
-                </Card>
-              </aside>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              <VistaAsistente
+                </TabsContent>
+
+                <TabsContent value="lista" className="mt-0 outline-none">
+                  <div className="rounded-2xl border border-slate-700 bg-slate-950/95 p-5 shadow-[0_25px_50px_-30px_rgba(15,23,42,0.85)]">
+                    <ListaReservas
+                      reservas={reservas}
+                      alEliminar={eliminarReserva}
+                      alEliminarAsistente={eliminarAsistente}
+                      asistentesRegistrados={asistentesRegistrados}
+                      usuarioActualId={currentUserId || undefined}
+                      modoUsuario={modoUsuario}
+                    />
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </section>
+
+            {/* COLUMNA DERECHA: FORMULARIO (Sin títulos repetidos) */}
+            <aside className="sticky top-28">
+              <FormularioReserva
+                alEnviar={agregarReserva}
                 reservas={reservas}
-                asistentesRegistrados={asistentesRegistrados}
-                onRegisterAttendee={registrarAsistente}
+                fechaSeleccionada={fechaSeleccionada}
               />
-            </div>
-          )}
-        </div>
+            </aside>
+          </div>
+        ) : (
+          <div className="max-w-5xl mx-auto">
+            <VistaAsistente
+              reservas={reservas}
+              asistentesRegistrados={asistentesRegistrados}
+              onRegisterAttendee={registrarAsistente}
+            />
+          </div>
+        )}
       </main>
     </div>
   );

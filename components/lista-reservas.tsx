@@ -2,7 +2,6 @@
 
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
 import {
   Trash2,
   Building2,
@@ -10,13 +9,12 @@ import {
   Clock,
   User,
   Users,
-  FileText,
+  Search,
+  Filter,
 } from "lucide-react";
-import type { Reserva } from "@/app/page";
-import { useState } from "react";
+import type { Reserva, AsistenteRegistrado } from "@/app/page";
+import { useState, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { useEffect } from "react";
-import { useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -25,7 +23,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogClose,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 
 type PropiedadesListaReservas = {
@@ -37,7 +34,7 @@ type PropiedadesListaReservas = {
   ) => Promise<boolean>;
   usuarioActualId?: string;
   modoUsuario?: "organizador" | "asistente" | null;
-  asistentesRegistrados?: import("@/app/page").AsistenteRegistrado[];
+  asistentesRegistrados?: AsistenteRegistrado[];
 };
 
 export function ListaReservas({
@@ -49,11 +46,7 @@ export function ListaReservas({
   modoUsuario,
 }: PropiedadesListaReservas) {
   const { toast } = useToast();
-  const [archivosSubidos, setArchivosSubidos] = useState<
-    Record<string, string[]>
-  >({});
   const [mostrarArchivados, setMostrarArchivados] = useState(false);
-  const [includeFullInSearch, setIncludeFullInSearch] = useState(false);
   const [search, setSearch] = useState("");
   const [auditorioFilter, setAuditorioFilter] = useState<"all" | "A" | "B">(
     "all",
@@ -67,38 +60,12 @@ export function ListaReservas({
   } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const reservasOrdenadas = useMemo(
-    () =>
-      [...reservas].sort((a, b) => {
-        const comparacionFecha =
-          new Date(a.fecha).getTime() - new Date(b.fecha).getTime();
-        if (comparacionFecha !== 0) return comparacionFecha;
-        return a.horaInicio.localeCompare(b.horaInicio);
-      }),
-    [reservas],
-  );
-
   const formatearFecha = (textoFecha?: string | null) => {
-    if (!textoFecha || typeof textoFecha !== "string") {
-      return "Fecha inválida";
-    }
-
-    // Parseo seguro para evitar crash cuando falta valor o formato no esperado
+    if (!textoFecha || typeof textoFecha !== "string") return "Fecha inválida";
     const partes = textoFecha.split("-").map((p) => p.trim());
-    if (partes.length !== 3) {
-      return textoFecha;
-    }
-
+    if (partes.length !== 3) return textoFecha;
     const [year, month, day] = partes.map(Number);
-    if (Number.isNaN(year) || Number.isNaN(month) || Number.isNaN(day)) {
-      return textoFecha;
-    }
-
     const fecha = new Date(year, month - 1, day);
-    if (Number.isNaN(fecha.getTime())) {
-      return textoFecha;
-    }
-
     return fecha.toLocaleDateString("es-ES", {
       weekday: "short",
       year: "numeric",
@@ -107,621 +74,232 @@ export function ListaReservas({
     });
   };
 
-  const manejarSubidaArchivo = (
-    reservaId: string,
-    e: React.ChangeEvent<HTMLInputElement>,
-  ) => {
-    const archivo = e.target.files?.[0];
-    if (!archivo) return false;
-
-    if (archivo.type !== "application/pdf") {
-      toast({
-        title: "Error",
-        description: "Solo se permiten archivos PDF",
-        variant: "destructive",
-      });
-      return false;
-    }
-
-    if (archivo.size > 10 * 1024 * 1024) {
-      toast({
-        title: "Error",
-        description: "El archivo no puede superar 10 MB",
-        variant: "destructive",
-      });
-      return false;
-    }
-
-    setArchivosSubidos((prev) => ({
-      ...prev,
-      [reservaId]: [...(prev[reservaId] || []), archivo.name],
-    }));
-
-    toast({
-      title: "Archivo adjuntado",
-      description: `${archivo.name} se ha adjuntado exitosamente`,
-    });
-  };
-
-  if (reservas.length === 0) {
-    return (
-      <Card className="p-12 text-center rounded-2xl shadow-xl bg-white/80 backdrop-blur-sm">
-        <div className="max-w-sm mx-auto">
-          <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center shadow-lg">
-            <Calendar className="w-10 h-10 text-white" />
-          </div>
-          <h3 className="text-xl font-semibold mb-2">Sin Reservas</h3>
-          <p className="text-gray-600">Crea una nueva reserva para comenzar</p>
-        </div>
-      </Card>
-    );
-  }
+  const filteredReservas = useMemo(() => {
+    return reservas
+      .filter((reserva) => {
+        if (!mostrarArchivados && reserva.archivado) return false;
+        if (auditorioFilter !== "all" && reserva.auditorio !== auditorioFilter) return false;
+        if (search.trim()) {
+          const q = search.toLowerCase();
+          if (!reserva.titulo.toLowerCase().includes(q) && !reserva.organizador.toLowerCase().includes(q)) return false;
+        }
+        const rDate = new Date(reserva.fecha);
+        if (dateFrom && rDate < new Date(dateFrom)) return false;
+        if (dateTo && rDate > new Date(dateTo)) return false;
+        if (onlyWithAvailability) {
+          const asistentesCount = (asistentesRegistrados || []).filter(a => String(a.reservaId) === String(reserva.id)).length;
+          const capacidad = reserva.asistentes || 168;
+          if (asistentesCount >= capacidad) return false;
+        }
+        return true;
+      })
+      .sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime());
+  }, [reservas, mostrarArchivados, auditorioFilter, search, dateFrom, dateTo, onlyWithAvailability, asistentesRegistrados]);
 
   return (
-    <section className="max-h-[calc(100vh-160px)] overflow-hidden rounded-2xl border border-[var(--border)] bg-card shadow-lg">
-      <div className="h-full flex flex-col">
-        <div className="flex items-center gap-2 p-4 border-b border-[var(--border)] bg-background">
-          <Calendar className="w-6 h-6 text-primary" />
-          <h2 className="text-2xl font-semibold">Dashboard de Reservas</h2>
-          <span className="ml-auto text-sm font-semibold bg-primary text-primary-foreground px-3 py-1 rounded-full shadow-sm">
-            {reservas.length} eventos
+    <section className="max-h-[calc(100vh-120px)] overflow-hidden rounded-3xl border border-slate-800 bg-slate-950/95 shadow-2xl flex flex-col">
+      {/* Header */}
+      <div className="flex items-center justify-between p-5 border-b border-slate-800 bg-slate-900/95">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-slate-800/70 rounded-xl">
+            <Calendar className="w-6 h-6 text-cyan-300" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-slate-100 leading-tight">Gestión de Eventos</h2>
+            <p className="text-sm text-slate-400">Panel de control y monitoreo</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold bg-slate-800 text-slate-300 px-3 py-1.5 rounded-full border border-slate-700">
+            {filteredReservas.length} encontrados
           </span>
         </div>
+      </div>
 
-        <div className="px-4 py-3 border-b border-primary/30 bg-background">
-          <div className="flex flex-wrap gap-3 items-center">
-            <label className="text-sm text-foreground mr-2 flex items-center gap-2">
-              <input
-                type="checkbox"
-                className="h-4 w-4 rounded border-2 border-primary/60 accent-primary cursor-pointer"
-                checked={mostrarArchivados}
-                onChange={(e) => setMostrarArchivados(e.target.checked)}
-              />
-              Mostrar archivados
-            </label>
+      {/* Filtros */}
+      <div className="p-4 border-b border-slate-800 bg-slate-900/90">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
             <input
               type="search"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar título u organizador"
-              className="text-sm px-3 py-2 rounded-lg border border-primary/40 bg-[#111b31] text-foreground shadow-sm focus:border-accent focus:ring-1 focus:ring-accent/30"
+              placeholder="Buscar evento..."
+              className="w-full text-sm pl-9 pr-3 py-2 rounded-2xl border border-slate-700 bg-slate-950 text-slate-100 focus:ring-2 focus:ring-cyan-500/30 outline-none transition-all"
             />
+          </div>
+          
+          <div className="flex gap-2">
             <select
               value={auditorioFilter}
               onChange={(e) => setAuditorioFilter(e.target.value as any)}
-              className="text-sm px-2 py-2 rounded-lg border border-primary/40 bg-[#111b31] text-foreground"
+              className="w-full text-sm px-3 py-2 rounded-2xl border border-slate-700 bg-slate-950 text-slate-100 outline-none"
             >
-              <option value="all">Todos los auditorios</option>
+              <option value="all">Todos los Auditorios</option>
               <option value="A">Auditorio A</option>
               <option value="B">Auditorio B</option>
             </select>
+          </div>
+
+          <div className="flex items-center gap-2 col-span-1 md:col-span-2">
             <input
               type="date"
               value={dateFrom || ""}
               onChange={(e) => setDateFrom(e.target.value || null)}
-              className="text-sm px-2 py-2 rounded-lg border border-primary/40 bg-[#111b31] text-foreground"
+              className="text-xs px-2 py-2 rounded-2xl border border-slate-700 bg-slate-950 text-slate-100 w-full"
             />
+            <span className="text-slate-400">al</span>
             <input
               type="date"
               value={dateTo || ""}
               onChange={(e) => setDateTo(e.target.value || null)}
-              className="text-sm px-2 py-2 rounded-lg border border-primary/40 bg-[#111b31] text-foreground"
+              className="text-xs px-2 py-2 rounded-2xl border border-slate-700 bg-slate-950 text-slate-100 w-full"
             />
-            <label className="text-sm text-foreground flex items-center gap-2">
-              <input
-                type="checkbox"
-                className="h-4 w-4 rounded border-2 border-secondary/60 accent-secondary cursor-pointer"
-                checked={onlyWithAvailability}
-                onChange={(e) => setOnlyWithAvailability(e.target.checked)}
-              />
-              Solo disponibles
-            </label>
           </div>
         </div>
+        
+        <div className="flex gap-4 mt-3 px-1">
+          <label className="text-xs text-slate-300 flex items-center gap-2 cursor-pointer hover:text-slate-100 transition-colors">
+            <input
+              type="checkbox"
+              className="h-4 w-4 rounded border-slate-700 accent-cyan-500"
+              checked={mostrarArchivados}
+              onChange={(e) => setMostrarArchivados(e.target.checked)}
+            />
+            Incluir archivados
+          </label>
+          <label className="text-xs text-slate-300 flex items-center gap-2 cursor-pointer hover:text-slate-100 transition-colors">
+            <input
+              type="checkbox"
+              className="h-4 w-4 rounded border-slate-700 accent-cyan-500"
+              checked={onlyWithAvailability}
+              onChange={(e) => setOnlyWithAvailability(e.target.checked)}
+            />
+            Solo con cupo
+          </label>
+        </div>
+      </div>
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
-            <div className="rounded-xl border border-primary/40 bg-[#0f1d34] p-3 shadow-md">
-              <p className="text-xs uppercase tracking-widest text-muted-foreground">
-                Eventos totales
-              </p>
-              <p className="text-2xl font-bold text-foreground">
-                {reservas.length}
-              </p>
-            </div>
-            <div className="rounded-xl border border-primary/40 bg-[#0f1d34] p-3 shadow-md">
-              <p className="text-xs uppercase tracking-widest text-muted-foreground">
-                Archivados
-              </p>
-              <p className="text-2xl font-bold text-foreground">
-                {reservas.filter((r) => r.archivado).length}
-              </p>
-            </div>
-            <div className="rounded-xl border border-primary/40 bg-[#0f1d34] p-3 shadow-md">
-              <p className="text-xs uppercase tracking-widest text-muted-foreground">
-                Con cupo disponible
-              </p>
-              <p className="text-2xl font-bold text-foreground">
-                {
-                  reservas.filter((reserva) => {
-                    const asistentes = (asistentesRegistrados || []).filter(
-                      (a) => String(a.reservaId) === String(reserva.id),
-                    );
-                    const capacidad = reserva.asistentes
-                      ? Math.min(
-                          reserva.asistentes,
-                          reserva.auditorio === "A" ? 168 : 168,
-                        )
-                      : reserva.auditorio === "A"
-                        ? 168
-                        : 168;
-                    return asistentes.length < capacidad;
-                  }).length
-                }
-              </p>
-            </div>
-            <div className="rounded-xl border border-primary/40 bg-[#0f1d34] p-3 shadow-md">
-              <p className="text-xs uppercase tracking-widest text-muted-foreground">
-                Filtro activo
-              </p>
-              <p className="text-lg font-semibold text-foreground">
-                {auditorioFilter === "all"
-                  ? "Todos"
-                  : `Auditorio ${auditorioFilter}`}
-              </p>
-            </div>
+      {/* Contenido con Scrollbar Personalizada */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 
+        scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent hover:scrollbar-thumb-slate-600">
+        {filteredReservas.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-64 border-2 border-dashed border-slate-800 rounded-3xl bg-slate-900/80">
+            <Filter className="w-12 h-12 text-slate-500 mb-3" />
+            <p className="text-slate-400 font-medium">No se encontraron resultados</p>
+            <Button variant="link" onClick={() => {setSearch(""); setAuditorioFilter("all")}} className="text-cyan-300 text-xs">
+              Limpiar filtros
+            </Button>
           </div>
+        ) : (
+          filteredReservas.map((reserva) => {
+            const esOrganizador = modoUsuario === "organizador" || reserva.organizadorId === usuarioActualId;
+            const asistentes = (asistentesRegistrados || []).filter(a => String(a.reservaId) === String(reserva.id));
+            const capacidadMaxima = reserva.asistentes || 168;
+            const restantes = Math.max(0, capacidadMaxima - asistentes.length);
 
-          {reservasOrdenadas.length === 0 ? (
-            <div className="rounded-xl border border-primary/40 bg-card/80 p-6 text-center text-muted-foreground">
-              No hay reservas que coincidan con los filtros seleccionados.
-            </div>
-          ) : null}
-
-          {reservasOrdenadas
-            .filter((reserva) => {
-              const isPast =
-                new Date(reserva.fecha) <
-                new Date(new Date().setHours(0, 0, 0, 0));
-              const isArchived = Boolean(reserva.archivado);
-              if (!mostrarArchivados && isArchived) return false;
-
-              // Auditorio filter
-              if (
-                auditorioFilter !== "all" &&
-                reserva.auditorio !== auditorioFilter
-              )
-                return false;
-
-              // Search filter (title or organizer)
-              if (search) {
-                const q = search.toLowerCase();
-                if (
-                  !reserva.titulo.toLowerCase().includes(q) &&
-                  !reserva.organizador.toLowerCase().includes(q)
-                )
-                  return false;
-              }
-
-              // Date range filter
-              if (dateFrom) {
-                const from = new Date(dateFrom);
-                const rDate = new Date(reserva.fecha);
-                if (rDate < from) return false;
-              }
-              if (dateTo) {
-                const to = new Date(dateTo);
-                const rDate = new Date(reserva.fecha);
-                if (rDate > to) return false;
-              }
-
-              // Availability filter
-              if (onlyWithAvailability) {
-                const asistentes = (asistentesRegistrados || []).filter(
-                  (a) => String(a.reservaId) === String(reserva.id),
-                );
-                const capacidadAuditorio =
-                  reserva.auditorio === "A" ? 168 : 168;
-                const capacidadMaxima =
-                  reserva.asistentes && reserva.asistentes > 0
-                    ? Math.min(reserva.asistentes, capacidadAuditorio)
-                    : capacidadAuditorio;
-                const restantes = Math.max(
-                  0,
-                  capacidadMaxima - asistentes.length,
-                );
-                if (restantes <= 0) return false;
-              }
-
-              // If user explicitly requests to include full rooms in search, allow
-              // full events to appear when a search query is present (but they
-              // will still show as full and not allow registration).
-              const asistentesForThis = (asistentesRegistrados || []).filter(
-                (a) => String(a.reservaId) === String(reserva.id),
-              );
-              const capacidadAuditorio2 = reserva.auditorio === "A" ? 168 : 168;
-              const capacidadMaxima2 =
-                reserva.asistentes && reserva.asistentes > 0
-                  ? Math.min(reserva.asistentes, capacidadAuditorio2)
-                  : capacidadAuditorio2;
-              const isFull = asistentesForThis.length >= capacidadMaxima2;
-              if (search && includeFullInSearch) {
-                // allow full events to be included in search results
-              } else {
-                if (isFull && onlyWithAvailability) return false;
-              }
-
-              return reserva;
-            })
-            .map((reserva) => {
-              const isArchived = Boolean(reserva.archivado);
-              if (!mostrarArchivados && isArchived) return false;
-
-              // Auditorio filter
-              if (
-                auditorioFilter !== "all" &&
-                reserva.auditorio !== auditorioFilter
-              )
-                return false;
-
-              // Search filter (title or organizer)
-              if (search) {
-                const q = search.toLowerCase();
-                if (
-                  !reserva.titulo.toLowerCase().includes(q) &&
-                  !reserva.organizador.toLowerCase().includes(q)
-                )
-                  return false;
-              }
-
-              // Date range filter
-              if (dateFrom) {
-                const from = new Date(dateFrom);
-                const rDate = new Date(reserva.fecha);
-                if (rDate < from) return false;
-              }
-              if (dateTo) {
-                const to = new Date(dateTo);
-                const rDate = new Date(reserva.fecha);
-                if (rDate > to) return false;
-              }
-
-              // Availability filter
-              if (onlyWithAvailability) {
-                const asistentes = (asistentesRegistrados || []).filter(
-                  (a) => String(a.reservaId) === String(reserva.id),
-                );
-                const capacidadAuditorio =
-                  reserva.auditorio === "A" ? 168 : 168;
-                const capacidadMaxima =
-                  reserva.asistentes && reserva.asistentes > 0
-                    ? Math.min(reserva.asistentes, capacidadAuditorio)
-                    : capacidadAuditorio;
-                const restantes = Math.max(
-                  0,
-                  capacidadMaxima - asistentes.length,
-                );
-                if (restantes <= 0) return false;
-              }
-
-              // If user explicitly requests to include full rooms in search, allow
-              // full events to appear when a search query is present (but they
-              // will still show as full and not allow registration).
-              const asistentesForThis = (asistentesRegistrados || []).filter(
-                (a) => String(a.reservaId) === String(reserva.id),
-              );
-              const capacidadAuditorio2 = reserva.auditorio === "A" ? 168 : 168;
-              const capacidadMaxima2 =
-                reserva.asistentes && reserva.asistentes > 0
-                  ? Math.min(reserva.asistentes, capacidadAuditorio2)
-                  : capacidadAuditorio2;
-              const isFull = asistentesForThis.length >= capacidadMaxima2;
-              if (search && includeFullInSearch) {
-                // allow full events to be included in search results
-              } else {
-                if (isFull && onlyWithAvailability) return false;
-              }
-
-              return reserva;
-            })
-            .map((reserva, index) => {
-              const esOrganizador =
-                (typeof modoUsuario !== "undefined" &&
-                  modoUsuario === "organizador") ||
-                reserva.organizadorId === usuarioActualId;
-              const archivos = archivosSubidos[reserva.id] || [];
-              const asistentes = (asistentesRegistrados || []).filter(
-                (a) => String(a.reservaId) === String(reserva.id),
-              );
-              const capacidadAuditorio = reserva.auditorio === "A" ? 168 : 168;
-              const capacidadMaxima =
-                reserva.asistentes && reserva.asistentes > 0
-                  ? Math.min(reserva.asistentes, capacidadAuditorio)
-                  : capacidadAuditorio;
-              const restantes = Math.max(
-                0,
-                capacidadMaxima - asistentes.length,
-              );
-
-              return (
-                <Card
-                  key={reserva.id || `reserva-${index}`}
-                  className={`p-4 rounded-xl transition-all hover:shadow-lg ${
-                    reserva.auditorio === "A"
-                      ? "border-l-4 border-l-blue-500 bg-blue-50/50"
-                      : "border-l-4 border-l-purple-500 bg-purple-50/50"
-                  }`}
-                >
+            return (
+              <Card
+                key={reserva.id}
+                className={`group relative overflow-hidden p-0 border border-slate-800 bg-slate-950/90 hover:border-slate-600 transition-all duration-300 rounded-3xl`}
+              >
+                {/* Indicador lateral de auditorio */}
+                <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${reserva.auditorio === 'A' ? 'bg-orange-500' : 'bg-purple-500'}`} />
+                
+                <div className="p-5">
                   <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-3">
-                        <div
-                          className={`p-1.5 rounded-lg shadow-md ${
-                            reserva.auditorio === "A"
-                              ? "bg-gradient-to-br from-blue-500 to-blue-600"
-                              : "bg-gradient-to-br from-purple-500 to-purple-600"
-                          }`}
-                        >
-                          <Building2 className="w-4 h-4 text-white" />
+                    <div className="space-y-3 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className={`text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded border ${
+                          reserva.auditorio === 'A'
+                            ? 'bg-orange-600/15 border-orange-500/30 text-orange-200'
+                            : 'bg-purple-600/15 border-purple-500/30 text-purple-200'
+                        }`}>
+                          Auditorio {reserva.auditorio}
+                        </span>
+                        {restantes === 0 && (
+                          <span className="text-[10px] uppercase font-bold bg-red-500/10 text-red-400 px-2 py-0.5 rounded">Agotado</span>
+                        )}
+                      </div>
+                      
+                      <h3 className="text-lg font-bold text-slate-100">
+                        {reserva.titulo}
+                      </h3>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 pt-3">
+                        <div className="flex items-center gap-2 rounded-2xl bg-slate-900 border border-slate-700 p-3 text-slate-300">
+                          <Calendar className="w-4 h-4 text-slate-500" />
+                          <span className="text-xs">{formatearFecha(reserva.fecha)}</span>
                         </div>
-                        <h3 className="text-lg font-semibold truncate">
-                          {reserva.titulo}
-                        </h3>
-                        <div className="ml-auto flex items-center gap-2">
-                          <span
-                            className={`px-3 py-1 rounded-full text-xs font-medium text-white shadow-md ${
-                              reserva.auditorio === "A"
-                                ? "bg-gradient-to-r from-blue-500 to-blue-600"
-                                : "bg-gradient-to-r from-purple-500 to-purple-600"
-                            }`}
-                          >
-                            Auditorio {reserva.auditorio}
-                          </span>
-                          {restantes === 0 && (
-                            <span className="text-xs bg-red-600 text-white px-2 py-0.5 rounded-full font-semibold">
-                              Auditorio lleno
-                            </span>
-                          )}
+                        <div className="flex items-center gap-2 rounded-2xl bg-slate-900 border border-slate-700 p-3 text-slate-300">
+                          <Clock className="w-4 h-4 text-slate-500" />
+                          <span className="text-xs">{reserva.horaInicio} - {reserva.horaFin}</span>
+                        </div>
+                        <div className="flex items-center gap-2 rounded-2xl bg-slate-900 border border-slate-700 p-3 text-slate-300">
+                          <User className="w-4 h-4 text-slate-500" />
+                          <span className="text-xs truncate">{reserva.organizador}</span>
+                        </div>
+                        <div className="flex items-center gap-2 rounded-2xl bg-slate-900 border border-slate-700 p-3 text-slate-300">
+                          <Users className="w-4 h-4 text-slate-500" />
+                          <span className="text-xs">{asistentes.length} / {capacidadMaxima}</span>
                         </div>
                       </div>
-
-                      <div className="grid sm:grid-cols-2 gap-3 text-sm text-gray-600">
-                        <div className="flex items-center gap-2">
-                          <Calendar className="w-4 h-4 shrink-0" />
-                          <span className="truncate">
-                            {formatearFecha(reserva.fecha)}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Clock className="w-4 h-4 shrink-0" />
-                          <span className="truncate">
-                            {reserva.horaInicio} - {reserva.horaFin}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <User className="w-4 h-4 shrink-0" />
-                          <span className="truncate">
-                            {reserva.organizador}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Users className="w-4 h-4 shrink-0" />
-                          <span className="truncate">
-                            {asistentes.length} asistentes
-                          </span>
-                        </div>
-                      </div>
-
-                      {reserva.descripcion && (
-                        <p className="mt-3 text-sm text-gray-600 bg-white/60 p-2 rounded-lg">
-                          {reserva.descripcion}
-                        </p>
-                      )}
-
-                      {archivos.length > 0 && (
-                        <div className="mt-3 p-3 bg-blue-50 rounded-lg">
-                          <p className="text-xs font-semibold text-gray-700 mb-2 flex items-center gap-1">
-                            <FileText className="w-3 h-3" />
-                            Archivos adjuntos ({archivos.length})
-                          </p>
-                          <div className="space-y-1">
-                            {archivos.map((nombre, idx) => (
-                              <div
-                                key={idx}
-                                className="text-xs text-gray-600 flex items-center gap-2"
-                              >
-                                <FileText className="w-3 h-3" />
-                                {nombre}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {esOrganizador && (
-                        <div className="mt-3">
-                          <details className="rounded-lg bg-white/60 p-3">
-                            <summary className="cursor-pointer font-medium text-sm text-gray-700 mb-2 flex items-center justify-between">
-                              <span>Ver asistentes ({asistentes.length})</span>
-                              <span className="text-xs text-gray-500">
-                                Restantes: {restantes}
-                              </span>
-                            </summary>
-                            <div className="mt-2 space-y-2">
-                              {asistentes.length === 0 ? (
-                                <div className="text-sm text-gray-600">
-                                  No hay asistentes registrados
-                                </div>
-                              ) : (
-                                asistentes.map((a) => (
-                                  <div
-                                    key={a.id}
-                                    className="flex items-center justify-between text-sm text-gray-700 bg-white/50 p-2 rounded-lg hover:bg-white/80 transition-colors"
-                                  >
-                                    <div className="flex-1">
-                                      <div className="font-medium">
-                                        {a.nombre}
-                                      </div>
-                                      <div className="text-xs text-gray-500">
-                                        {a.email}
-                                      </div>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                      <div className="text-right text-xs text-gray-600">
-                                        Asiento {a.numeroAsiento}
-                                      </div>
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => {
-                                          console.info(
-                                            "ListaReservas: click eliminar asistente (direct)",
-                                            {
-                                              reservaId: reserva.id,
-                                              asistenteId: a.id,
-                                            },
-                                          );
-                                          alEliminarAsistente(reserva.id, a.id);
-                                        }}
-                                        className="h-auto p-1 hover:bg-red-100 hover:text-red-600"
-                                      >
-                                        <Trash2 className="w-3 h-3" />
-                                      </Button>
-                                    </div>
-                                  </div>
-                                ))
-                              )}
-                            </div>
-                          </details>
-                        </div>
-                      )}
-                      {/* Archival controlled by server; no local archive actions shown */}
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      {esOrganizador && (
-                        <>
-                          {/* Removed: 'Ver auditorio' dialog and the related dialog-trigger trash icon
-                            These controls were non-functional; kept the dev-only direct delete button below. */}
-
-                          {/* Confirm delete attendee dialog (controlled) */}
-                          <Dialog
-                            open={!!toDeleteAttendee}
-                            onOpenChange={(open) => {
-                              if (!open) setToDeleteAttendee(null);
-                            }}
-                          >
-                            <DialogContent>
-                              <DialogHeader>
-                                <DialogTitle>Eliminar asistente</DialogTitle>
-                                <DialogDescription>
-                                  ¿Confirmas eliminar a
-                                  {toDeleteAttendee
-                                    ? ` ${toDeleteAttendee.asistente.nombre}`
-                                    : ""}
-                                  ?
-                                </DialogDescription>
-                              </DialogHeader>
-                              <DialogFooter>
-                                <DialogClose asChild>
-                                  <Button variant="ghost" disabled={isDeleting}>
-                                    Cancelar
-                                  </Button>
-                                </DialogClose>
-                                <Button
-                                  className="bg-red-600 text-white"
-                                  disabled={isDeleting}
-                                  onClick={async () => {
-                                    if (!toDeleteAttendee) return false;
-                                    setIsDeleting(true);
-                                    try {
-                                      console.info(
-                                        "ListaReservas: confirm delete asistente from dialog",
-                                        {
-                                          reservaId: toDeleteAttendee.reservaId,
-                                          asistenteId:
-                                            toDeleteAttendee.asistente.id,
-                                        },
-                                      );
-                                      const success = await alEliminarAsistente(
-                                        toDeleteAttendee.reservaId,
-                                        toDeleteAttendee.asistente.id,
-                                      );
-                                      if (success) {
-                                        setToDeleteAttendee(null);
-                                        toast({
-                                          title: "Eliminado",
-                                          description:
-                                            "Asistente eliminado correctamente",
-                                        });
-                                      } else {
-                                        toast({
-                                          title: "Error",
-                                          description:
-                                            "No se pudo eliminar al asistente",
-                                          variant: "destructive",
-                                        });
-                                      }
-                                    } finally {
-                                      setIsDeleting(false);
-                                    }
-                                  }}
-                                >
-                                  {isDeleting ? "Eliminando..." : "Eliminar"}
-                                </Button>
-                              </DialogFooter>
-                            </DialogContent>
-                          </Dialog>
-
-                          {/* Production delete button for organizers: shows for actual organizers */}
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            title="Eliminar evento"
-                            className="h-auto"
-                            onClick={async () => {
-                              // confirm delete action with user
-                              if (
-                                !window.confirm(
-                                  `¿Confirmas eliminar el evento "${reserva.titulo}"? Esta acción no se puede deshacer.`,
-                                )
-                              )
-                                return false;
-                              setIsDeleting(true);
-                              try {
-                                const ok = await alEliminar(
-                                  reserva.id,
-                                  reserva.organizadorId as any,
-                                );
-                                if (ok) {
-                                  toast({
-                                    title: "Evento eliminado",
-                                    description:
-                                      "El evento fue eliminado correctamente",
-                                  });
-                                } else {
-                                  toast({
-                                    title: "Error",
-                                    description:
-                                      "No se pudo eliminar el evento",
-                                    variant: "destructive",
-                                  });
-                                }
-                              } finally {
-                                setIsDeleting(false);
-                              }
-                            }}
-                          >
-                            Borrar
-                          </Button>
-                        </>
-                      )}
-                    </div>
+                    {esOrganizador && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          if (window.confirm(`¿Eliminar "${reserva.titulo}"?`)) {
+                            alEliminar(reserva.id, reserva.organizadorId);
+                          }
+                        }}
+                        className="text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-xl transition-all"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </Button>
+                    )}
                   </div>
-                </Card>
-              );
-            })}
-        </div>
+
+                  {/* Detalle de Asistentes expandible */}
+                  {esOrganizador && (
+                    <div className="mt-4 pt-4 border-t border-slate-800/50">
+                      <details className="group/details">
+                        <summary className="list-none cursor-pointer flex items-center justify-between text-xs text-slate-400 hover:text-slate-200">
+                          <span className="flex items-center gap-2">
+                            Lista de Asistentes 
+                            <span className="bg-slate-800 px-2 py-0.5 rounded-md text-[10px]">{asistentes.length}</span>
+                          </span>
+                          <span className="text-primary font-medium group-open/details:rotate-180 transition-transform">▼</span>
+                        </summary>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3 animate-in fade-in slide-in-from-top-1">
+                          {asistentes.map((a) => (
+                            <div key={a.id} className="flex items-center justify-between p-2 rounded-lg bg-slate-900/50 border border-slate-800">
+                              <div className="min-w-0">
+                                <p className="text-xs font-medium text-slate-200 truncate">{a.nombre}</p>
+                                <p className="text-[10px] text-slate-500 truncate">{a.email}</p>
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => alEliminarAsistente(reserva.id, a.id)}
+                                className="h-7 w-7 p-0 hover:text-red-400"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </details>
+                    </div>
+                  )}
+                </div>
+              </Card>
+            );
+          })
+        )}
       </div>
     </section>
   );

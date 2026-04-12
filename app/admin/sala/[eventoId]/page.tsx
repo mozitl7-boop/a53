@@ -7,10 +7,11 @@ type Props = {
 export default async function Page({ params }: Props) {
   const { eventoId } = await params;
   return (
-    <div className="p-6">
-      <h2 className="text-2xl font-bold mb-4">Vista administrativa — Sala</h2>
-      <p className="text-sm text-gray-600 mb-4">Evento: {eventoId}</p>
-      {/* Client component that will fetch the grid */}
+    <div className="p-6 max-w-7xl mx-auto">
+      <div className="mb-6">
+        <h1 className="text-4xl font-bold text-white tracking-tight">Vista Administrativa</h1>
+        <p className="text-sm text-slate-300 mt-2">Gestión de asientos y asistentes del evento: <span className="font-semibold">{eventoId}</span></p>
+      </div>
       <VistaSala eventoId={eventoId} />
     </div>
   );

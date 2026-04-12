@@ -264,7 +264,7 @@ export function LoginUsuario({
                   className="w-full mt-2 rounded-2xl border border-white/10 bg-[#0b1830] px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:border-primary focus:ring-2 focus:ring-primary/40 outline-none"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="correo@universidad.edu"
+                  placeholder="correo@universidad.com"
                 />
 
                 <label className="block text-sm font-medium text-slate-300 mt-3">

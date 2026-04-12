@@ -2,7 +2,7 @@
 
 ## 📧 Descripción General
 
-El sistema AudiTec ahora usa **MailerSend** como proveedor principal de emails transaccionales. MailerSend es una API confiable, rápida y ofrece un plan gratuito generoso para proyectos en desarrollo.
+El sistema A53 ahora usa **MailerSend** como proveedor principal de emails transaccionales. MailerSend es una API confiable, rápida y ofrece un plan gratuito generoso para proyectos en desarrollo.
 
 ## 🔑 Credenciales Configuradas
 

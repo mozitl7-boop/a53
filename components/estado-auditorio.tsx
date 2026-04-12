@@ -91,17 +91,17 @@ export function EstadoAuditorio({
 
   return (
     <div className="grid md:grid-cols-2 gap-4 mb-8">
-      <Card className="p-4 bg-gradient-to-br from-orange-950 via-orange-800 to-slate-950 border border-orange-500/20 rounded-3xl shadow-2xl transition-all hover:shadow-[0_30px_60px_-35px_rgba(153,63,0,0.75)]">
+      <Card className="p-5 bg-gradient-to-br from-orange-600 via-orange-500 to-red-600 border border-orange-400/30 rounded-3xl shadow-2xl transition-all hover:shadow-[0_30px_60px_-35px_rgba(234,88,12,0.6)]">
         <div>
-          <div className="flex items-start justify-between mb-4 pb-2 border-b border-orange-500/20">
+          <div className="flex items-start justify-between mb-4 pb-2 border-b border-white/20">
             <div className="flex items-center gap-2">
-              <div className="p-2 bg-orange-500/10 rounded-xl border border-orange-500/25 text-orange-200">
-                <Building2 className="w-5 h-5 text-orange-300" />
+              <div className="p-2 bg-white/20 rounded-xl border border-white/30 text-white">
+                <Building2 className="w-5 h-5 text-white" />
               </div>
               <div>
                 <h3 className="text-xl font-bold text-white">Auditorio A</h3>
-                <div className="flex items-center gap-1.5 text-xs mt-1 text-orange-200">
-                  <Users className="w-4 h-4 text-orange-300" />
+                <div className="flex items-center gap-1.5 text-xs mt-1 text-white/90">
+                  <Users className="w-4 h-4 text-white" />
                   <span>
                     {estadoA.reserva ? (
                       (() => {
@@ -139,8 +139,8 @@ export function EstadoAuditorio({
               {obtenerTextoEstado(estadoA.estado)}
             </p>
             {estadoA.reserva && (
-              <div className="bg-slate-900/70 text-white rounded-xl p-3 mt-3 border border-primary/30 shadow-md">
-                <p className="font-semibold text-primary">{estadoA.reserva.titulo}</p>
+              <div className="bg-white/10 text-white rounded-xl p-3 mt-3 border border-white/20 shadow-md">
+                <p className="font-semibold text-white">{estadoA.reserva.titulo}</p>
                 <p className="text-sm mt-1 text-white/90">
                   {estadoA.reserva.horaInicio} - {estadoA.reserva.horaFin}
                 </p>
@@ -153,18 +153,17 @@ export function EstadoAuditorio({
         </div>
       </Card>
 
-      <Card className="p-6 bg-gradient-to-br from-secondary/80 via-[#a55aed] to-accent/50 text-white rounded-2xl shadow-2xl hover:shadow-[0_0_30px_rgba(157,78,221,0.35)] transition-all overflow-hidden relative border-2 border-secondary/40">
-        <div className="absolute inset-0 bg-gradient-to-b from-black/30 to-transparent pointer-events-none" />
+      <Card className="p-5 bg-gradient-to-br from-purple-500 via-purple-600 to-indigo-600 text-white rounded-3xl shadow-2xl hover:shadow-[0_30px_60px_-35px_rgba(147,51,234,0.6)] transition-all overflow-hidden relative border border-purple-400/30">
         <div className="relative z-10">
-          <div className="flex items-start justify-between mb-4 pb-4 border-b border-white/20">
+          <div className="flex items-start justify-between mb-4 pb-2 border-b border-white/20">
             <div className="flex items-center gap-2">
-              <div className="p-2 bg-muted rounded-lg border border-border">
-                <Building2 className="w-5 h-5 text-foreground" />
+              <div className="p-2 bg-white/20 rounded-xl border border-white/30">
+                <Building2 className="w-5 h-5 text-white" />
               </div>
               <div>
                 <h3 className="text-xl font-bold">Auditorio B</h3>
-                <div className="flex items-center gap-1.5 text-xs mt-1 text-muted-foreground">
-                  <Users className="w-4 h-4" />
+                <div className="flex items-center gap-1.5 text-xs mt-1 text-white/90">
+                  <Users className="w-4 h-4 text-white" />
                   <span>
                     {estadoB.reserva ? (
                       (() => {
@@ -202,8 +201,8 @@ export function EstadoAuditorio({
               {obtenerTextoEstado(estadoB.estado)}
             </p>
             {estadoB.reserva && (
-              <div className="bg-slate-900/70 text-white rounded-xl p-3 mt-3 border border-secondary/30 shadow-md">
-                <p className="font-semibold text-secondary">{estadoB.reserva.titulo}</p>
+              <div className="bg-white/10 text-white rounded-xl p-3 mt-3 border border-white/20 shadow-md">
+                <p className="font-semibold text-white">{estadoB.reserva.titulo}</p>
                 <p className="text-sm mt-1 text-white/90">
                   {estadoB.reserva.horaInicio} - {estadoB.reserva.horaFin}
                 </p>

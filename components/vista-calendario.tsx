@@ -90,7 +90,7 @@ export function Calendario({
           <ChevronLeft className="w-5 h-5" />
         </Button>
         <div className="flex items-center gap-3">
-          <CalendarIcon className="w-5 h-5 text-blue-600" />
+          <CalendarIcon className="bg-gradient-to-r from-orange-600 to-orange-400" />
           <h2 className="text-xl font-semibold capitalize">
             {formatearFecha(fechaSeleccionada)}
             {esHoy && (
@@ -147,7 +147,7 @@ export function Calendario({
                       reservasA.map((reserva) => (
                         <div
                           key={reserva.id}
-                          className="bg-linear-to-b from-blue-500 to-blue-600 text-white p-3 rounded-lg h-full shadow-md"
+                          className="bg-gradient-to-b from-orange-600 to-orange-400 text-white p-3 rounded-lg h-full shadow-md"
                         >
                           <p className="font-semibold truncate text-sm">
                             {reserva.titulo}
