@@ -24,6 +24,7 @@ import {
   User,
   Eye,
   X,
+  Building2,
 } from "lucide-react";
 import {
   Dialog,
@@ -298,6 +299,31 @@ export function VistaAsistente({
     setDialogsAbiertos((prev) => ({ ...prev, [reservaId]: abierto }));
   };
 
+  const obtenerEstadoEvento = (reserva: { fecha: string; horaInicio: string; horaFin: string }) => {
+    const ahora = new Date();
+    const inicio = new Date(`${reserva.fecha}T${reserva.horaInicio}:00`);
+    const fin = new Date(`${reserva.fecha}T${reserva.horaFin}:00`);
+
+    if (Number.isNaN(inicio.getTime()) || Number.isNaN(fin.getTime())) {
+      return "Próximo";
+    }
+
+    if (ahora < inicio) return "Próximo";
+    if (ahora >= inicio && ahora <= fin) return "En curso";
+    return "Finalizado";
+  };
+
+  const obtenerColorEstado = (estado: string) => {
+    switch (estado) {
+      case "En curso":
+        return "bg-emerald-500/15 text-emerald-200 border-emerald-500/30";
+      case "Finalizado":
+        return "bg-slate-700/60 text-slate-200 border-slate-700";
+      default:
+        return "bg-blue-500/15 text-blue-200 border-blue-500/30";
+    }
+  };
+
   const manejarRegistro = (reservaId: string) => async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -334,20 +360,22 @@ export function VistaAsistente({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {misRegistros.length > 0 && (
-        <Card className="p-4 rounded-3xl shadow-[0_25px_50px_-30px_rgba(15,23,42,0.85)] bg-slate-950/95 border border-white/10">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-4">
+        <Card className="p-5 rounded-2xl shadow-[0_25px_50px_-30px_rgba(15,23,42,0.85)] bg-slate-950/95 border border-slate-800">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between mb-4">
             <div>
-              <h2 className="text-3xl font-bold text-white">Mis Registros</h2>
-              <p className="text-sm text-slate-400">Eventos a los que estás registrado</p>
+              <h2 className="text-3xl font-bold text-white tracking-tight">Mis Registros</h2>
+              <p className="mt-1 text-xs text-slate-200 max-w-xl">
+                Eventos a los que estás registrado. Aquí verás tus asientos asignados y los detalles clave.
+              </p>
             </div>
             <div className="flex flex-wrap gap-2">
               <Button
                 variant="secondary"
                 size="sm"
                 onClick={() => window.location.reload()}
-                className="text-sm"
+                className="text-xs"
               >
                 Actualizar
               </Button>
@@ -355,50 +383,67 @@ export function VistaAsistente({
                 variant="outline"
                 size="sm"
                 onClick={() => setFiltrosActivos(null)}
-                className="text-sm"
+                className="text-xs"
               >
                 Ver todos
               </Button>
             </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {misRegistros.map((asistente) => {
               const reserva = eventosActuales.find(
                 (r) => r.id === asistente.reservaId
               );
               if (!reserva) return null;
 
+              const estado = obtenerEstadoEvento(reserva);
+              const estadoClasses = obtenerColorEstado(estado);
+              const auditorioClasses = reserva.auditorio === "A"
+                ? "bg-slate-900 border-red-500/30 text-red-300"
+                : "bg-slate-900 border-purple-500/30 text-purple-300";
+
               return (
                 <div
                   key={asistente.id}
-                  className="rounded-3xl border border-white/10 bg-slate-900/90 p-5 shadow-[0_18px_45px_-30px_rgba(15,23,42,0.9)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_20px_60px_-30px_rgba(15,23,42,0.9)]"
+                  className="rounded-3xl border border-slate-700 bg-slate-950 p-5 shadow-[0_16px_40px_-30px_rgba(15,23,42,0.85)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_20px_60px_-35px_rgba(15,23,42,0.9)] flex flex-col h-full"
                 >
-                  <div className="flex items-start justify-between gap-3 mb-3">
-                    <Badge className="rounded-2xl bg-cyan-500/20 text-cyan-300 px-3 py-1 text-sm font-semibold">
-                      Asiento {asistente.numeroAsiento}
-                    </Badge>
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge className="rounded-full bg-none bg-slate-800 border border-slate-700 text-slate-200 px-2 py-1 text-[10px] font-semibold tracking-wide">
+                        Asiento {asistente.numeroAsiento}
+                      </Badge>
+                      <Badge className={`rounded-full bg-none ${auditorioClasses} border px-2 py-1 text-[10px] font-semibold tracking-wide`}>
+                        Aud. {reserva.auditorio}
+                      </Badge>
+                      <Badge className={`rounded-full bg-none ${estadoClasses} border px-2 py-1 text-[10px] font-semibold tracking-wide`}>
+                        {estado}
+                      </Badge>
+                    </div>
                     <Button
                       size="sm"
-                      variant="outline"
+                      variant="ghost"
                       onClick={() => setDetalleAsientoAbierto(asistente.id)}
-                      className="h-9 px-4 text-sm font-semibold"
+                      className="h-9 rounded-2xl px-4 text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 shadow-md transition-all"
                     >
-                      Ver
+                      Ver detalles
                     </Button>
                   </div>
-                  <h3 className="text-lg font-bold text-white leading-tight mb-2">{reserva.titulo}</h3>
-                  <div className="space-y-2 text-sm text-slate-300">
-                    <div className="flex items-center gap-2">
-                      <CalendarIcon className="w-4 h-4 text-cyan-300" />
+                  <h3 className="text-2xl font-bold text-white leading-tight mb-3 line-clamp-2">
+                    {reserva.titulo}
+                  </h3>
+                  <div className="grid grid-cols-1 gap-3 text-sm text-slate-300">
+                    <div className="flex items-center gap-1.5">
+                      <CalendarIcon className="w-3.5 h-3.5 text-blue-300" />
                       <span>{formatearFecha(reserva.fecha)}</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-cyan-300" />
-                      <span>{reserva.horaInicio}</span>
+                    <div className="flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5 text-blue-300" />
+                      <span>{reserva.horaInicio} - {reserva.horaFin}</span>
                     </div>
-                    <Badge className="rounded-full bg-emerald-500/15 text-emerald-300 px-3 py-1 text-sm">
-                      Aud. {reserva.auditorio}
-                    </Badge>
+                    <div className="rounded-2xl bg-slate-800 border border-slate-700 p-3 text-slate-300 flex items-center gap-2">
+                      <User className="w-4 h-4 text-slate-400" />
+                      <span className="text-xs font-medium truncate">{reserva.organizador || "Organizador no asignado"}</span>
+                    </div>
                   </div>
                 </div>
               );
@@ -408,29 +453,32 @@ export function VistaAsistente({
       )}
 
       <BuscadorEventos 
-        onFiltros={(filtros) => setFiltrosActivos(filtros)}
+        alBuscar={(filtros) => setFiltrosActivos(filtros)}
+        alLimpiar={() => setFiltrosActivos(null)}
       />
 
-      <Card className="p-4 rounded-xl shadow-md bg-card border border-border">
-        <div className="flex items-center gap-3 mb-3 pb-2 border-b border-border">
-          <div className="p-2 bg-muted rounded-md">
-            <UserPlus className="w-5 h-5 text-foreground" />
-          </div>
-          <div>
-            <h2 className="text-xl font-semibold">Eventos Disponibles</h2>
-            <p className="text-sm text-muted-foreground">
-              Regístrate para asistir a un evento
-            </p>
+      <Card className="p-5 rounded-2xl shadow-[0_20px_45px_-25px_rgba(15,23,42,0.7)] bg-slate-950/95 border border-slate-800">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between mb-4 pb-3 border-b border-slate-800">
+          <div className="flex items-center gap-2">
+            <div className="p-2 bg-slate-900 rounded-xl">
+              <UserPlus className="w-4 h-4 text-cyan-300" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-white">Eventos Disponibles</h2>
+              <p className="text-xs text-slate-200">
+                Regístrate para asistir y reserva tu lugar antes de que se agoten los asientos.
+              </p>
+            </div>
           </div>
         </div>
 
         {eventosFiltrados.length === 0 ? (
           <div className="text-center py-6">
-            <CalendarIcon className="w-14 h-14 mx-auto mb-2 text-gray-400" />
-            <h3 className="text-lg font-semibold text-muted-foreground mb-1">
+            <CalendarIcon className="w-14 h-14 mx-auto mb-2 text-slate-400" />
+            <h3 className="text-lg font-semibold text-slate-100 mb-1">
               No hay eventos disponibles
             </h3>
-            <p className="text-sm text-muted-foreground mb-3">
+            <p className="text-sm text-slate-300 mb-3">
               Vuelve más tarde para ver nuevos eventos
             </p>
             <div className="flex justify-center gap-2">
@@ -451,7 +499,7 @@ export function VistaAsistente({
             </div>
           </div>
         ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {eventosFiltrados.map((reserva) => {
               const asientosOcupados = obtenerAsientosOcupados(reserva.id);
               const servidor = conteosServidor[reserva.id];
@@ -472,47 +520,49 @@ export function VistaAsistente({
               return (
                 <Card
                   key={reserva.id}
-                  className="p-4 rounded-lg border border-border shadow-sm hover:shadow-md transition-all bg-card"
+                  className="p-5 rounded-2xl border border-slate-700 shadow-sm hover:shadow-lg transition-all bg-slate-950 flex flex-col h-full"
                 >
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <h3 className="text-xl font-bold mb-0.5">
+                  <div className="flex flex-col gap-2 mb-3">
+                    <div className="min-w-0">
+                      <h3 className="text-lg font-bold text-white leading-tight line-clamp-2">
                         {reserva.titulo}
                       </h3>
-                      <p className="text-sm text-gray-600">
+                      <p className="mt-1 text-xs text-slate-300 line-clamp-1">
                         Por {reserva.organizador}
                       </p>
                     </div>
-                    <Badge
-                      className={`${
-                        reserva.auditorio === "A"
-                          ? "bg-orange-500"
-                          : "bg-purple-600"
-                      } text-white font-semibold px-2 py-1 text-xs rounded-lg`}>
-                      Aud. {reserva.auditorio}
-                    </Badge>
-                    {estaLleno(reserva) && (
-                      <Badge className="ml-2 bg-red-500 text-white font-semibold px-2 py-1 text-xs rounded-lg">
-                        Auditorio lleno
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <Badge
+                        className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold ${
+                          reserva.auditorio === "A"
+                            ? "bg-orange-600 border-orange-600 text-white"
+                            : "bg-purple-600 border-purple-600 text-white"
+                        }`}>
+                        Aud. {reserva.auditorio}
                       </Badge>
-                    )}
+                      {estaLleno(reserva) && (
+                        <Badge className="bg-red-500/80 text-white font-semibold px-2.5 py-0.5 text-xs rounded-full">
+                          Lleno
+                        </Badge>
+                      )}
+                    </div>
                   </div>
 
-                  <div className="space-y-1.5 mb-3">
-                    <div className="flex items-center gap-2 text-sm text-gray-700">
-                      <CalendarIcon className="w-4 h-4 text-blue-500" />
-                      <span className="font-medium">
-                        {formatearFecha(reserva.fecha)}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-700">
-                      <Clock className="w-4 h-4 text-purple-500" />
-                      <span className="font-medium">
-                        {reserva.horaInicio} - {reserva.horaFin}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-700">
-                      <MapPin className="w-4 h-4 text-green-500" />
+<div className="space-y-1.5 mb-3 text-xs text-slate-300">
+                      <div className="flex items-center gap-1.5 text-slate-300">
+                        <CalendarIcon className="w-3.5 h-3.5 text-blue-300 shrink-0" />
+                        <span className="font-medium line-clamp-1">
+                          {formatearFecha(reserva.fecha)}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-slate-300">
+                        <Clock className="w-3.5 h-3.5 text-blue-300 shrink-0" />
+                        <span className="font-medium">
+                          {reserva.horaInicio} - {reserva.horaFin}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-slate-300">
+                        <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                       <span className="font-medium">
                         Auditorio {reserva.auditorio}
                       </span>
@@ -520,33 +570,33 @@ export function VistaAsistente({
                   </div>
 
                   {reserva.descripcion && (
-                    <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                    <p className="text-xs text-slate-300 mb-3 line-clamp-2">
                       {reserva.descripcion}
                     </p>
                   )}
 
                   <div className="mb-3">
-                    <div className="flex justify-between text-xs mb-2 font-medium text-gray-600">
-                      <span className="flex items-center gap-1">
-                        <Armchair className="w-3 h-3" />
+                    <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between text-xs mb-2 font-medium text-slate-300">
+                      <span className="flex items-center gap-1 text-slate-300">
+                        <Armchair className="w-3 h-3 text-slate-400" />
                         Asientos ocupados
                       </span>
                       <span
                         className={
                           porcentajeOcupacion > 80
-                            ? "text-orange-600"
-                            : "text-green-600"
+                            ? "text-orange-300"
+                            : "text-blue-300"
                         }
                       >
                         {asientosOcupados}/{capacidadMaxima}
                       </span>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden shadow-inner">
+                    <div className="w-full bg-slate-800 rounded-full h-2 overflow-hidden shadow-inner">
                       <div
                         className={`h-full transition-all duration-300 rounded-full ${
                           porcentajeOcupacion > 80
-                            ? "bg-red-500"
-                            : "bg-emerald-500"
+                            ? "bg-orange-500"
+                            : "bg-blue-500"
                         }`}
                         style={{ width: `${porcentajeOcupacion}%` }}
                       />
@@ -554,9 +604,9 @@ export function VistaAsistente({
                   </div>
 
                   {yaRegistrado ? (
-                    <div className="flex items-center gap-2 p-2 bg-green-50 rounded-lg border border-green-200">
-                      <CheckCircle2 className="w-5 h-5 text-green-600" />
-                      <span className="text-sm font-semibold text-green-700">
+                    <div className="flex items-center gap-2 p-3 bg-slate-900 rounded-xl border border-slate-700 mt-auto">
+                      <CheckCircle2 className="w-4 h-4 text-blue-300" />
+                      <span className="text-xs font-semibold text-slate-100">
                         Ya estás registrado
                       </span>
                     </div>
@@ -583,30 +633,33 @@ export function VistaAsistente({
                             }
                             setDialogAbierto(reserva.id, true);
                           }}
-                          className="w-full bg-primary text-white font-semibold rounded-lg shadow-sm hover:shadow-md transition-all"
+                          className={`w-full text-white font-semibold rounded-lg shadow-sm transition-all text-sm py-2 mt-auto ${
+                            reserva.auditorio === "A"
+                              ? "bg-orange-500 hover:bg-orange-400"
+                              : "bg-purple-600 hover:bg-purple-500"
+                          }`}
                         >
-                          <UserPlus className="w-4 h-4 mr-2" />
+                          <UserPlus className="w-3.5 h-3.5 mr-2" />
                           Registrarme
                         </Button>
                       ) : (
-                        <div className="mt-4 p-6 rounded-2xl shadow-xl bg-white/90 border border-gray-200">
-                          <h3 className="text-xl font-bold mb-2 text-purple-700">
+                        <div className="mt-3 p-4 rounded-2xl shadow-lg bg-slate-950/95 border border-slate-800">
+                          <h3 className="text-base font-bold mb-1.5 text-white">
                             Registro al Evento
                           </h3>
-                          <p className="mb-4 text-gray-600 text-sm">
-                            Completa tus datos para registrarte a "
-                            {reserva.titulo}"
+                          <p className="mb-3 text-slate-300 text-xs">
+                            Completa tus datos para registrarte a "{reserva.titulo}"
                           </p>
                           <form
                             onSubmit={manejarRegistro(reserva.id)}
-                            className="space-y-4"
+                            className="space-y-3"
                           >
                             <div>
                               <Label
                                 htmlFor={`nombre-${reserva.id}`}
-                                className="text-base font-semibold flex items-center gap-2"
+                                className="text-xs font-semibold flex items-center gap-1.5 text-slate-100"
                               >
-                                <User className="w-4 h-4" />
+                                <User className="w-3.5 h-3.5 text-slate-300" />
                                 Nombre Completo
                               </Label>
                               <Input
@@ -619,19 +672,19 @@ export function VistaAsistente({
                                   })
                                 }
                                 placeholder="Tu nombre"
-                                className="mt-2 rounded-lg bg-gray-100"
+                                className="mt-1.5 rounded-lg bg-gray-100 text-sm"
                                 readOnly
                               />
-                              <p className="text-xs text-gray-500 mt-1">
+                              <p className="text-xs text-gray-500 mt-0.5">
                                 Datos de tu perfil (no editables)
                               </p>
                             </div>
                             <div>
                               <Label
                                 htmlFor={`email-${reserva.id}`}
-                                className="text-base font-semibold flex items-center gap-2"
+                                className="text-xs font-semibold flex items-center gap-1.5 text-slate-100"
                               >
-                                <Mail className="w-4 h-4" />
+                                <Mail className="w-3.5 h-3.5 text-slate-300" />
                                 Correo Electrónico
                               </Label>
                               <Input
@@ -645,15 +698,15 @@ export function VistaAsistente({
                                   })
                                 }
                                 placeholder="tu@email.com"
-                                className="mt-2 rounded-lg bg-gray-100"
+                                className="mt-1.5 rounded-lg bg-gray-100 text-sm"
                                 readOnly
                               />
-                              <p className="text-xs text-gray-500 mt-1">
+                              <p className="text-xs text-gray-500 mt-0.5">
                                 Datos de tu perfil (no editables)
                               </p>
                             </div>
-                            <div className="flex items-start gap-2 p-3 bg-blue-50 rounded-lg text-sm text-blue-700">
-                              <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                            <div className="flex items-start gap-2 p-2.5 bg-slate-900 rounded-lg text-xs text-slate-300 border border-slate-700">
+                              <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0 text-cyan-300" />
                               <p>
                                 Se te asignará automáticamente el siguiente
                                 asiento disponible en orden de llegada.
@@ -673,16 +726,16 @@ export function VistaAsistente({
                                     );
                                   })() || isSubmittingByEvent[reserva.id]
                                 )}
-                                className="w-full bg-primary text-white font-semibold rounded-lg shadow-sm disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-md transition-all"
+                                className="w-full bg-primary text-white font-semibold rounded-lg shadow-sm disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-md transition-all text-sm py-2"
                               >
                                 {isSubmittingByEvent[reserva.id]
                                   ? "Registrando..."
-                                  : "Confirmar Registro"}
+                                  : "Confirmar"}
                               </Button>
                               <Button
                                 type="button"
                                 variant="outline"
-                                className="w-full"
+                                className="w-full text-sm py-2"
                                 disabled={isSubmittingByEvent[reserva.id]}
                                 onClick={() =>
                                   setDialogAbierto(reserva.id, false)
@@ -704,7 +757,7 @@ export function VistaAsistente({
       </Card>
 
       {detalleAsientoAbierto && (
-              <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+              <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-3">
                 {(() => {
                   const asistente = misRegistros.find(
                     (a) => a.id === detalleAsientoAbierto
@@ -715,113 +768,111 @@ export function VistaAsistente({
                   if (!reserva) return null;
 
                   return (
-                    <Card className="w-full max-w-2xl bg-card border-2 border-primary/60 rounded-xl shadow-2xl shadow-primary/30 max-h-[90vh] overflow-y-auto">
-                      <div className="p-6 space-y-6">
-                        <div className="flex items-center justify-between border-b border-primary/20 pb-4">
-                          <h2 className="text-2xl font-bold text-foreground">
+                    <Card className="w-full max-w-lg bg-card border-2 border-primary/60 rounded-xl shadow-2xl shadow-primary/30 max-h-[90vh] overflow-y-auto">
+                      <div className="p-5 space-y-5">
+                        <div className="flex items-center justify-between border-b border-primary/20 pb-3">
+                          <h2 className="text-xl font-bold text-foreground">
                             Detalles del Evento
                           </h2>
                           <button
                             onClick={() => setDetalleAsientoAbierto(null)}
-                            className="p-2 hover:bg-primary/10 rounded-lg transition text-foreground"
+                            className="p-1.5 hover:bg-primary/10 rounded-lg transition text-foreground"
                           >
-                            <X className="w-6 h-6" />
+                            <X className="w-5 h-5" />
                           </button>
                         </div>
 
                         <div className="space-y-4">
-                          <div className="flex gap-4 items-start">
+                          <div className="flex gap-3 items-start">
                             <div className="flex-1 space-y-3">
                               <div>
-                                <p className="text-xs text-muted-foreground font-bold uppercase tracking-wide">
+                                <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">
                                   Evento
                                 </p>
-                                <p className="text-xl font-bold text-foreground">
+                                <p className="text-lg font-bold text-slate-100">
                                   {reserva.titulo}
                                 </p>
                               </div>
                               <div>
-                                <p className="text-xs text-muted-foreground font-bold uppercase tracking-wide">
+                                <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">
                                   Organizador
                                 </p>
-                                <p className="text-base text-foreground">
+                                <p className="text-base text-slate-100">
                                   {reserva.organizador || "No especificado"}
                                 </p>
                               </div>
                             </div>
-                            <div className="flex-shrink-0 text-center">
-                              <div className="bg-primary/10 border-2 border-primary/40 rounded-xl p-4 shadow-lg">
-                                <Armchair className="w-6 h-6 mx-auto text-primary mb-2" />
-                                <p className="text-xs text-muted-foreground font-medium mb-1">
+                            <div className="shrink-0 text-center">
+                              <div className="bg-primary/10 border-2 border-primary/40 rounded-lg p-3 shadow-lg">
+                                <Armchair className="w-5 h-5 mx-auto text-primary mb-1" />
+                                <p className="text-xs text-slate-400 font-medium mb-0.5">
                                   Asiento
                                 </p>
-                                <p className="text-3xl font-bold text-foreground">
+                                <p className="text-2xl font-bold text-slate-100">
                                   {asistente.numeroAsiento}
                                 </p>
                               </div>
                             </div>
                           </div>
 
-                          <div className="grid grid-cols-2 gap-3">
-                            <div className="bg-[#0f1d34] p-3 rounded-lg border-2 border-primary/30">
-                              <p className="text-xs text-muted-foreground font-bold uppercase tracking-wide mb-1">
+                          <div className="grid grid-cols-2 gap-2.5">
+                            <div className="bg-slate-800 p-3.5 rounded-xl border border-slate-700">
+                              <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">
                                 Fecha
                               </p>
-                              <p className="text-base font-semibold text-foreground">
+                              <p className="text-sm font-semibold text-slate-100 line-clamp-2">
                                 {formatearFecha(reserva.fecha)}
                               </p>
                             </div>
-                            <div className="bg-[#0f1d34] p-3 rounded-lg border-2 border-secondary/30">
-                              <p className="text-xs text-muted-foreground font-bold uppercase tracking-wide mb-1">
+                            <div className="bg-slate-800 p-3.5 rounded-xl border border-slate-700">
+                              <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">
                                 Hora
                               </p>
-                              <p className="text-base font-semibold text-foreground">
+                              <p className="text-sm font-semibold text-slate-100">
                                 {reserva.horaInicio} - {reserva.horaFin}
                               </p>
                             </div>
-                            <div className="bg-[#0f1d34] p-3 rounded-lg border-2 border-primary/30">
-                              <p className="text-xs text-muted-foreground font-bold uppercase tracking-wide mb-1">
+                            <div className="bg-slate-800 p-3.5 rounded-xl border border-slate-700">
+                              <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">
                                 Auditorio
                               </p>
-                              <p className="text-base font-semibold text-foreground">
-                                Auditorio {reserva.auditorio}
+                              <p className="text-sm font-semibold text-slate-100">
+                                Aud. {reserva.auditorio}
                               </p>
                             </div>
-                            <div className="bg-[#0f1d34] p-3 rounded-lg border-2 border-accent/40">
-                              <p className="text-xs text-muted-foreground font-bold uppercase tracking-wide mb-1">
+                            <div className="bg-slate-800 p-3.5 rounded-xl border border-slate-700">
+                              <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">
                                 Estado
                               </p>
-                              <p className="text-base font-semibold text-accent">
+                              <p className="text-sm font-semibold text-emerald-300">
                                 ✓ Confirmado
                               </p>
                             </div>
                           </div>
 
                           {reserva.descripcion && (
-                            <div className="bg-[#0f1d34] p-4 rounded-lg border-2 border-primary/30">
-                              <p className="text-xs text-muted-foreground font-bold uppercase tracking-wide mb-2">
+                            <div className="bg-slate-800/50 p-3.5 rounded-lg border border-slate-700">
+                              <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mb-2">
                                 Descripción
                               </p>
-                              <p className="text-foreground">
+                              <p className="text-sm text-slate-100 leading-relaxed">
                                 {reserva.descripcion}
                               </p>
                             </div>
                           )}
 
-                          <div className="bg-secondary/10 border-2 border-secondary/30 rounded-lg p-4 flex gap-3">
-                            <AlertCircle className="w-5 h-5 text-secondary flex-shrink-0 mt-0.5" />
-                            <p className="text-sm text-foreground">
-                              Por favor, llega 10 minutos antes de la hora de
-                              inicio. Ten en cuenta tu número de asiento para
-                              facilitar tu entrada al evento.
+                          <div className="bg-blue-950/30 border border-blue-900/50 rounded-lg p-3.5 flex gap-2.5">
+                            <AlertCircle className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
+                            <p className="text-xs text-blue-100 leading-relaxed">
+                              Por favor, llega 10 minutos antes de la hora de inicio. Ten en cuenta tu número de asiento para facilitar tu entrada al evento.
                             </p>
                           </div>
                         </div>
 
-                        <div className="flex gap-3 pt-4 border-t border-primary/20">
+                        <div className="flex gap-2 pt-3 border-t border-primary/20">
                           <Button
                             onClick={() => setDetalleAsientoAbierto(null)}
-                            className="flex-1 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition-all"
+                            className="flex-1 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition-all text-sm py-2"
                           >
                             Cerrar
                           </Button>
