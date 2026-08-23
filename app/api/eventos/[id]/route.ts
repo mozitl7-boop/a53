@@ -18,12 +18,8 @@ export async function DELETE(
     let callerId = sessionUser ? String(sessionUser.id) : null;
     const callerTipo = sessionUser ? sessionUser.tipo_usuario || null : null;
     if (!callerId) {
-      callerId =
-        (request.headers &&
-          request.headers.get &&
-          request.headers.get("x-usuario-id")) ||
-        body.usuario_id ||
-        null;
+      const headerUser = process.env.NODE_ENV !== "production" && request.headers && request.headers.get ? request.headers.get("x-usuario-id") : null;
+      callerId = headerUser || body.usuario_id || null;
     }
 
     if (!callerId) {
@@ -49,13 +45,20 @@ export async function DELETE(
 
     // Antes de eliminar, obtener emails de asistentes y datos del organizador
     // Detectar columna del organizador probando ambas columnas en una sola consulta
-    const { data: evtCols } = await supabaseAdmin
+    const { data: evtCols, error: evtError } = await supabaseAdmin
       .from("eventos")
-      .select("id,id_organizador,organizador_id")
+      .select("*")
       .eq("id", id)
       .limit(1);
+    if (evtError) throw evtError;
+    if (!evtCols || evtCols.length === 0) {
+      return NextResponse.json({ success: false, error: "Evento no encontrado" }, { status: 404 });
+    }
     const row = (evtCols && evtCols[0]) || ({} as any);
-    const organizadorColumn = row.organizador_id ? "organizador_id" : "id_organizador";
+    const titulo = row.titulo ?? row.title ?? "Evento";
+    const organizadorColumn = Object.prototype.hasOwnProperty.call(row, "organizador_id")
+      ? "organizador_id"
+      : "id_organizador";
 
     let attendeeEmails: string[] = [];
     let organizadorEmail: string | null = null;
@@ -109,7 +112,6 @@ export async function DELETE(
       }
 
       // Nota: la operación siguiente no se ejecuta en una transacción.
-      // considere crear una function/RPC en la DB.
       await supabaseAdmin.from("registros_asistentes").delete().eq("id_evento", id);
       const { data: delEvt, error: delErr } = await supabaseAdmin.from("eventos").delete().eq("id", id).select("id");
       if (delErr) throw delErr;
@@ -128,8 +130,8 @@ export async function DELETE(
       // Enviar notificaciones por email: al organizador y a los asistentes
       try {
         const { sendEmailNotification } = await import("@/lib/notifications");
-        const subject = `Evento eliminado: ${id}`;
-        const text = `El evento con id ${id} ha sido eliminado por su organizador.`;
+        const subject = `Evento eliminado: ${titulo}`;
+        const text = `El evento ${titulo} ha sido eliminado por su organizador.`;
 
         // Notificar al organizador (siempre que tengamos su email)
         if (organizadorEmail) {

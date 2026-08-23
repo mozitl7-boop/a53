@@ -28,7 +28,9 @@ import {
 import { crearValidadorReservas } from "@/lib/validacion-reservas";
 
 type PropiedadesFormularioReserva = {
-  alEnviar: (reserva: Omit<Reserva, "id">) => void;
+  alEnviar: (
+    reserva: Omit<Reserva, "id"> & Partial<Pick<Reserva, "id">>
+  ) => void;
   reservas: Reserva[];
   fechaSeleccionada: Date;
 };
@@ -250,7 +252,7 @@ export function FormularioReserva({
                   horaInicio: (result.evento.hora_inicio || datosFormulario.horaInicio).toString().substring(0, 5),
                   horaFin: (result.evento.hora_fin || horaFinTexto).toString().substring(0, 5),
                   titulo: result.evento.titulo || datosFormulario.titulo,
-                  organizador: result.evento.organizador_nombre || datosFormulario.organizador || null,
+                  organizador: result.evento.organizador_nombre || datosFormulario.organizador || "",
                   organizadorId: result.evento.id_organizador || organizadorId || undefined,
                   descripcion: result.evento.descripcion || datosFormulario.descripcion || "",
                   asistentes: Number((result.evento.asistentes_esperados ?? Number.parseInt(datosFormulario.asistentes)) || 0),
@@ -264,7 +266,7 @@ export function FormularioReserva({
                   horaInicio: datosFormulario.horaInicio,
                   horaFin: horaFinTexto,
                   titulo: datosFormulario.titulo,
-                  organizador: datosFormulario.organizador || null,
+                  organizador: datosFormulario.organizador || "",
                   descripcion: datosFormulario.descripcion || "",
                   asistentes: Number.parseInt(datosFormulario.asistentes) || 0,
                   carrera: datosFormulario.carrera || null,
@@ -369,10 +371,10 @@ export function FormularioReserva({
       ? "focus:border-orange-400 focus:ring-orange-400/40"
       : "focus:border-purple-400 focus:ring-purple-400/40";
 
-  const fieldClass = `mt-2 rounded-2xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-slate-100 placeholder:text-slate-500 shadow-sm outline-none transition duration-200 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/30`;
+  const fieldClass = `mt-2 rounded-2xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-slate-100 placeholder:text-[var(--input-placeholder)] shadow-sm outline-none transition duration-200 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/30`;
 
   return (
-    <Card className="sticky top-4 rounded-2xl shadow-[0_25px_50px_-30px_rgba(15,23,42,0.85)] bg-slate-950/95 border border-slate-700 flex flex-col max-h-[90vh] overflow-hidden">
+    <Card className="w-full min-w-0 max-w-full rounded-2xl border border-slate-700 bg-slate-950/95 shadow-[0_25px_50px_-30px_rgba(15,23,42,0.85)] flex flex-col max-h-[90vh] overflow-hidden lg:sticky lg:top-4">
       <div className="flex items-center gap-4 p-5 border-b border-slate-700 shrink-0 bg-slate-950/95">
         <div className="p-3 rounded-xl bg-cyan-500/20 text-cyan-300">
           <CalendarIcon className="w-6 h-6" />
@@ -382,8 +384,9 @@ export function FormularioReserva({
           <p className="text-sm text-slate-300">Gestión de espacios y eventos</p>
         </div>
       </div>
-      <div className="flex-1 overflow-y-auto p-5 scrollbar-custom">
-        <form id="reserva-form" onSubmit={manejarEnvio} className="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <div className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto p-3 scrollbar-custom sm:p-5">
+        <div className="mx-auto w-full min-w-0 max-w-130">
+          <form id="reserva-form" onSubmit={manejarEnvio} className="grid min-w-0 grid-cols-1 gap-5 md:grid-cols-2">
           
           {/* Selector de Auditorio */}
           <div className="md:col-span-2">
@@ -624,7 +627,8 @@ export function FormularioReserva({
               />
             </div>
           </div>
-        </form>
+          </form>
+        </div>
       </div>
 
       {/* FOOTER FIJO */}

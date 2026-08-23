@@ -79,22 +79,22 @@ export function Calendario({
   const esHoy = fechaSeleccionada.toDateString() === new Date().toDateString();
 
   return (
-    <Card className="p-6 rounded-2xl shadow-xl bg-white/80 backdrop-blur-sm">
-      <div className="flex items-center justify-between mb-6 pb-4 border-b-2 border-gray-200">
+    <Card className="w-full min-w-0 overflow-hidden rounded-2xl bg-white/80 p-2 shadow-xl backdrop-blur-sm sm:p-6">
+      <div className="mb-4 flex min-w-0 items-center justify-between gap-2 border-b-2 border-gray-200 pb-3 sm:mb-6 sm:pb-4">
         <Button
           variant="outline"
           size="icon"
           onClick={() => cambiarFecha(-1)}
-          className="rounded-lg shadow-md hover:shadow-lg hover:bg-linear-to-b hover:from-blue-500 hover:to-blue-600 hover:text-white hover:border-blue-600 transition-all"
+          className="shrink-0 rounded-lg shadow-md hover:shadow-lg hover:bg-linear-to-b hover:from-blue-500 hover:to-blue-600 hover:text-white hover:border-blue-600 transition-all"
         >
           <ChevronLeft className="w-5 h-5" />
         </Button>
-        <div className="flex items-center gap-3">
-          <CalendarIcon className="bg-gradient-to-r from-orange-600 to-orange-400" />
-          <h2 className="text-xl font-semibold capitalize">
+        <div className="flex min-w-0 items-center justify-center gap-2 text-center sm:gap-3">
+          <CalendarIcon className="shrink-0 bg-linear-to-r from-orange-600 to-orange-400" />
+          <h2 className="min-w-0 text-base font-semibold capitalize leading-tight sm:text-xl">
             {formatearFecha(fechaSeleccionada)}
             {esHoy && (
-              <span className="ml-2 text-sm bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-3 py-1 rounded-full shadow-md">
+              <span className="ml-1 inline-block rounded-full bg-linear-to-r from-blue-500 to-cyan-500 px-2 py-1 text-xs text-white shadow-md sm:ml-2 sm:px-3 sm:text-sm">
                 Hoy
               </span>
             )}
@@ -104,21 +104,21 @@ export function Calendario({
           variant="outline"
           size="icon"
           onClick={() => cambiarFecha(1)}
-          className="rounded-lg shadow-md hover:shadow-lg hover:bg-linear-to-b hover:from-blue-500 hover:to-blue-600 hover:text-white hover:border-blue-600 transition-all"
+          className="shrink-0 rounded-lg shadow-md hover:shadow-lg hover:bg-linear-to-b hover:from-blue-500 hover:to-blue-600 hover:text-white hover:border-blue-600 transition-all"
         >
           <ChevronRight className="w-5 h-5" />
         </Button>
       </div>
 
-      <div className="overflow-x-auto">
-        <div className="min-w-[600px]">
-          <div className="grid grid-cols-[100px_1fr_1fr] gap-3 mb-3">
+      <div className="w-full min-w-0 overflow-x-hidden px-0.5 sm:px-0">
+        <div className="w-full min-w-0">
+          <div className="mb-3 grid grid-cols-[52px_minmax(0,1fr)_minmax(0,1fr)] gap-1.5 sm:grid-cols-[100px_1fr_1fr] sm:gap-3">
             <div className="font-semibold text-sm text-gray-600">Hora</div>
-            <div className="font-semibold text-sm text-center bg-orange-500 text-white py-2 rounded-lg shadow-sm">
-              Auditorio A
+            <div className="truncate rounded-lg bg-orange-500 py-2 text-center text-xs font-semibold text-white shadow-sm sm:text-sm">
+              <span className="sm:hidden">Aud. A</span><span className="hidden sm:inline">Auditorio A</span>
             </div>
-            <div className="font-semibold text-sm text-center bg-purple-500 text-white py-2 rounded-lg shadow-sm">
-              Auditorio B
+            <div className="truncate rounded-lg bg-purple-500 py-2 text-center text-xs font-semibold text-white shadow-sm sm:text-sm">
+              <span className="sm:hidden">Aud. B</span><span className="hidden sm:inline">Auditorio B</span>
             </div>
           </div>
 
@@ -130,14 +130,14 @@ export function Calendario({
               return (
                 <div
                   key={hora}
-                  className="grid grid-cols-[100px_1fr_1fr] gap-3"
+                  className="grid grid-cols-[52px_minmax(0,1fr)_minmax(0,1fr)] gap-1.5 sm:grid-cols-[100px_1fr_1fr] sm:gap-3"
                 >
-                  <div className="text-sm font-medium py-4 flex items-center text-gray-600">
+                  <div className="flex items-center py-4 text-xs font-medium text-gray-600 sm:text-sm">
                     {hora.toString().padStart(2, "0")}:00
                   </div>
 
                   <div
-                    className={`min-h-[55px] rounded-lg p-2 transition-all ${
+                    className={`min-h-14 min-w-0 rounded-lg p-1.5 transition-all sm:p-2 ${
                       reservasA.length > 0
                         ? "bg-orange-50"
                         : "bg-white hover:bg-orange-50/50 shadow-sm"
@@ -147,15 +147,15 @@ export function Calendario({
                       reservasA.map((reserva) => (
                         <div
                           key={reserva.id}
-                          className="bg-gradient-to-b from-orange-600 to-orange-400 text-white p-3 rounded-lg h-full shadow-md"
+                          className="h-full min-w-0 rounded-lg bg-linear-to-b from-orange-600 to-orange-400 p-2 text-white shadow-md sm:p-3"
                         >
-                          <p className="font-semibold truncate text-sm">
+                          <p className="truncate text-xs font-semibold sm:text-sm">
                             {reserva.titulo}
                           </p>
-                          <p className="truncate text-xs mt-1 text-white/90">
+                          <p className="mt-1 truncate text-[10px] text-white/90 sm:text-xs">
                             {reserva.organizador}
                           </p>
-                          <p className="text-xs mt-1 text-white/80">
+                          <p className="mt-1 truncate text-[10px] text-white/80 sm:text-xs">
                             {reserva.horaInicio} - {reserva.horaFin}
                           </p>
                         </div>
@@ -168,7 +168,7 @@ export function Calendario({
                   </div>
 
                   <div
-                    className={`min-h-[55px] rounded-lg p-2 transition-all ${
+                    className={`min-h-14 min-w-0 rounded-lg p-1.5 transition-all sm:p-2 ${
                       reservasB.length > 0
                         ? "bg-purple-50"
                         : "bg-white hover:bg-purple-50/50 shadow-sm"
@@ -178,15 +178,15 @@ export function Calendario({
                       reservasB.map((reserva) => (
                         <div
                           key={reserva.id}
-                          className="bg-linear-to-b from-purple-500 to-purple-600 text-white p-3 rounded-lg h-full shadow-md"
+                          className="h-full min-w-0 rounded-lg bg-linear-to-b from-purple-500 to-purple-600 p-2 text-white shadow-md sm:p-3"
                         >
-                          <p className="font-semibold truncate text-sm">
+                          <p className="truncate text-xs font-semibold sm:text-sm">
                             {reserva.titulo}
                           </p>
-                          <p className="truncate text-xs mt-1 text-white/90">
+                          <p className="mt-1 truncate text-[10px] text-white/90 sm:text-xs">
                             {reserva.organizador}
                           </p>
-                          <p className="text-xs mt-1 text-white/80">
+                          <p className="mt-1 truncate text-[10px] text-white/80 sm:text-xs">
                             {reserva.horaInicio} - {reserva.horaFin}
                           </p>
                         </div>

@@ -30,7 +30,11 @@ export default function MagicLinkPage() {
       }
 
       try {
-        const res = await fetch(`/api/auth/magic?token=${t}`);
+        const res = await fetch(`/api/auth/magic`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token: t }),
+        });
         const data = await res.json();
 
         if (!res.ok) {
@@ -45,7 +49,7 @@ export default function MagicLinkPage() {
         setLoading(false);
         setTimeout(() => {
           router.push("/");
-        }, 1000);
+        }, 800);
       } catch (err: any) {
         if (!mounted) return;
         setError(err.message || "Error procesando el enlace");
@@ -74,13 +78,13 @@ export default function MagicLinkPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-cyan-50">
-        <div className="text-center">
+      <div className="flex items-center justify-center min-h-screen bg-[var(--background)]">
+        <div className="text-center p-6">
           <div className="inline-block animate-spin mb-4">
-            <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full"></div>
+            <div className="w-12 h-12 border-4 border-[var(--muted)] border-t-[var(--primary)] rounded-full"></div>
           </div>
-          <p className="text-gray-700 font-medium">Verificando enlace...</p>
-          <p className="text-sm text-gray-500 mt-2">
+          <p className="text-[var(--foreground)] font-medium">Verificando enlace...</p>
+          <p className="text-sm text-[var(--muted-foreground)] mt-2">
             Por favor espera mientras procesamos tu solicitud.
           </p>
         </div>
@@ -90,17 +94,15 @@ export default function MagicLinkPage() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-cyan-50">
-        <div className="w-[380px] bg-white rounded-xl shadow-lg p-6">
+      <div className="flex items-center justify-center min-h-screen bg-[var(--background)]">
+        <div className="w-[380px] bg-[var(--card)] rounded-xl shadow-md p-6">
           <div className="text-center">
             <div className="text-5xl mb-4">❌</div>
-            <h1 className="text-xl font-bold text-red-600 mb-2">
-              Enlace Inválido
-            </h1>
-            <p className="text-gray-600 text-sm mb-6">{error}</p>
+            <h1 className="text-xl font-bold text-[var(--destructive)] mb-2">Enlace Inválido</h1>
+            <p className="text-[var(--muted-foreground)] text-sm mb-6">{error}</p>
             <button
               onClick={() => (window.location.href = "/")}
-              className="w-full bg-blue-600 text-white py-2 rounded-full text-sm font-medium hover:bg-blue-700"
+              className="w-full bg-[var(--primary)] text-[var(--primary-foreground)] py-2 rounded-full text-sm font-medium hover:opacity-95"
             >
               Volver al inicio
             </button>
@@ -111,18 +113,14 @@ export default function MagicLinkPage() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-cyan-50">
-      <div className="w-[380px] bg-white rounded-xl shadow-lg p-6">
+    <div className="flex items-center justify-center min-h-screen bg-[var(--background)]">
+      <div className="w-[380px] bg-[var(--card)] rounded-xl shadow-md p-6">
         <div className="text-center">
           <div className="text-5xl mb-4">✓</div>
-          <h1 className="text-xl font-bold text-green-600 mb-2">
-            ¡Sesión iniciada!
-          </h1>
-          <p className="text-gray-600 text-sm mb-6">
-            Redirigiendo a la página principal...
-          </p>
+          <h1 className="text-xl font-bold text-[var(--success)] mb-2">¡Sesión iniciada!</h1>
+          <p className="text-[var(--muted-foreground)] text-sm mb-6">Redirigiendo a la página principal...</p>
           <div className="inline-block animate-spin">
-            <div className="w-8 h-8 border-2 border-green-200 border-t-green-600 rounded-full"></div>
+            <div className="w-8 h-8 border-2 border-[var(--muted)] border-t-[var(--success)] rounded-full"></div>
           </div>
         </div>
       </div>

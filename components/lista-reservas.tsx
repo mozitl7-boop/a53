@@ -9,10 +9,10 @@ import {
   Clock,
   User,
   Users,
-  Search,
   Filter,
 } from "lucide-react";
 import type { Reserva, AsistenteRegistrado } from "@/app/page";
+import { BuscadorEventos, type FiltrosBusqueda } from "@/components/buscador-eventos";
 import { useState, useMemo } from "react";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -24,6 +24,16 @@ import {
   DialogTitle,
   DialogClose,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 type PropiedadesListaReservas = {
   reservas: Reserva[];
@@ -35,6 +45,7 @@ type PropiedadesListaReservas = {
   usuarioActualId?: string;
   modoUsuario?: "organizador" | "asistente" | null;
   asistentesRegistrados?: AsistenteRegistrado[];
+  abrirFiltrosSolicitud?: number;
 };
 
 export function ListaReservas({
@@ -44,21 +55,18 @@ export function ListaReservas({
   usuarioActualId,
   asistentesRegistrados,
   modoUsuario,
+  abrirFiltrosSolicitud = 0,
 }: PropiedadesListaReservas) {
   const { toast } = useToast();
   const [mostrarArchivados, setMostrarArchivados] = useState(false);
-  const [search, setSearch] = useState("");
-  const [auditorioFilter, setAuditorioFilter] = useState<"all" | "A" | "B">(
-    "all",
-  );
-  const [dateFrom, setDateFrom] = useState<string | null>(null);
-  const [dateTo, setDateTo] = useState<string | null>(null);
   const [onlyWithAvailability, setOnlyWithAvailability] = useState(false);
   const [toDeleteAttendee, setToDeleteAttendee] = useState<{
     reservaId: string;
     asistente: any;
   } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [reservaParaEliminar, setReservaParaEliminar] = useState<Reserva | null>(null);
+  const [filtrosCompartidos, setFiltrosCompartidos] = useState<FiltrosBusqueda | null>(null);
 
   const formatearFecha = (textoFecha?: string | null) => {
     if (!textoFecha || typeof textoFecha !== "string") return "Fecha inválida";
@@ -78,14 +86,20 @@ export function ListaReservas({
     return reservas
       .filter((reserva) => {
         if (!mostrarArchivados && reserva.archivado) return false;
-        if (auditorioFilter !== "all" && reserva.auditorio !== auditorioFilter) return false;
-        if (search.trim()) {
-          const q = search.toLowerCase();
-          if (!reserva.titulo.toLowerCase().includes(q) && !reserva.organizador.toLowerCase().includes(q)) return false;
+        if (filtrosCompartidos) {
+          const query = filtrosCompartidos.textoBusqueda.trim().toLowerCase();
+          if (
+            query &&
+            !reserva.titulo.toLowerCase().includes(query) &&
+            !reserva.descripcion.toLowerCase().includes(query) &&
+            !reserva.organizador.toLowerCase().includes(query)
+          ) return false;
+          if (filtrosCompartidos.auditorio !== "todos" && reserva.auditorio !== filtrosCompartidos.auditorio) return false;
+          if (filtrosCompartidos.carrera !== "todos" && reserva.carrera !== filtrosCompartidos.carrera) return false;
+          if (filtrosCompartidos.fechaInicio && reserva.fecha < filtrosCompartidos.fechaInicio) return false;
+          if (filtrosCompartidos.fechaFin && reserva.fecha > filtrosCompartidos.fechaFin) return false;
         }
         const rDate = new Date(reserva.fecha);
-        if (dateFrom && rDate < new Date(dateFrom)) return false;
-        if (dateTo && rDate > new Date(dateTo)) return false;
         if (onlyWithAvailability) {
           const asistentesCount = (asistentesRegistrados || []).filter(a => String(a.reservaId) === String(reserva.id)).length;
           const capacidad = reserva.asistentes || 168;
@@ -94,10 +108,10 @@ export function ListaReservas({
         return true;
       })
       .sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime());
-  }, [reservas, mostrarArchivados, auditorioFilter, search, dateFrom, dateTo, onlyWithAvailability, asistentesRegistrados]);
+  }, [reservas, mostrarArchivados, onlyWithAvailability, asistentesRegistrados, filtrosCompartidos]);
 
   return (
-    <section className="max-h-[calc(100vh-120px)] overflow-hidden rounded-3xl border border-slate-800 bg-slate-950/95 shadow-2xl flex flex-col">
+    <section className="mx-auto w-full max-w-6xl max-h-[calc(100vh-120px)] overflow-hidden rounded-3xl border border-slate-800 bg-slate-950/95 shadow-2xl flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between p-5 border-b border-slate-800 bg-slate-900/95">
         <div className="flex items-center gap-3">
@@ -116,50 +130,17 @@ export function ListaReservas({
         </div>
       </div>
 
-      {/* Filtros */}
-      <div className="p-4 border-b border-slate-800 bg-slate-900/90">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-            <input
-              type="search"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar evento..."
-              className="w-full text-sm pl-9 pr-3 py-2 rounded-2xl border border-slate-700 bg-slate-950 text-slate-100 focus:ring-2 focus:ring-cyan-500/30 outline-none transition-all"
-            />
-          </div>
-          
-          <div className="flex gap-2">
-            <select
-              value={auditorioFilter}
-              onChange={(e) => setAuditorioFilter(e.target.value as any)}
-              className="w-full text-sm px-3 py-2 rounded-2xl border border-slate-700 bg-slate-950 text-slate-100 outline-none"
-            >
-              <option value="all">Todos los Auditorios</option>
-              <option value="A">Auditorio A</option>
-              <option value="B">Auditorio B</option>
-            </select>
-          </div>
+      <div id="organizador-filtros" className="scroll-mt-6 border-b border-slate-800 bg-slate-900/90 p-3 md:p-4">
+        <BuscadorEventos
+          alBuscar={setFiltrosCompartidos}
+          alLimpiar={() => setFiltrosCompartidos(null)}
+          abrirFiltrosSolicitud={abrirFiltrosSolicitud}
+        />
+      </div>
 
-          <div className="flex items-center gap-2 col-span-1 md:col-span-2">
-            <input
-              type="date"
-              value={dateFrom || ""}
-              onChange={(e) => setDateFrom(e.target.value || null)}
-              className="text-xs px-2 py-2 rounded-2xl border border-slate-700 bg-slate-950 text-slate-100 w-full"
-            />
-            <span className="text-slate-400">al</span>
-            <input
-              type="date"
-              value={dateTo || ""}
-              onChange={(e) => setDateTo(e.target.value || null)}
-              className="text-xs px-2 py-2 rounded-2xl border border-slate-700 bg-slate-950 text-slate-100 w-full"
-            />
-          </div>
-        </div>
-        
-        <div className="flex gap-4 mt-3 px-1">
+      {/* Opciones propias de administración */}
+      <div className="border-b border-slate-800 bg-slate-900/90 p-4">
+        <div className="flex flex-wrap gap-4 px-1">
           <label className="text-xs text-slate-300 flex items-center gap-2 cursor-pointer hover:text-slate-100 transition-colors">
             <input
               type="checkbox"
@@ -186,9 +167,9 @@ export function ListaReservas({
         scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent hover:scrollbar-thumb-slate-600">
         {filteredReservas.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-64 border-2 border-dashed border-slate-800 rounded-3xl bg-slate-900/80">
-            <Filter className="w-12 h-12 text-slate-500 mb-3" />
+            <Filter className="w-12 h-12 text-muted mb-3" />
             <p className="text-slate-400 font-medium">No se encontraron resultados</p>
-            <Button variant="link" onClick={() => {setSearch(""); setAuditorioFilter("all")}} className="text-cyan-300 text-xs">
+            <Button variant="link" onClick={() => setFiltrosCompartidos(null)} className="text-cyan-300 text-xs">
               Limpiar filtros
             </Button>
           </div>
@@ -229,19 +210,19 @@ export function ListaReservas({
 
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 pt-3">
                         <div className="flex items-center gap-2 rounded-2xl bg-slate-900 border border-slate-700 p-3 text-slate-300">
-                          <Calendar className="w-4 h-4 text-slate-500" />
+                          <Calendar className="w-4 h-4 text-muted" />
                           <span className="text-xs">{formatearFecha(reserva.fecha)}</span>
                         </div>
                         <div className="flex items-center gap-2 rounded-2xl bg-slate-900 border border-slate-700 p-3 text-slate-300">
-                          <Clock className="w-4 h-4 text-slate-500" />
+                          <Clock className="w-4 h-4 text-muted" />
                           <span className="text-xs">{reserva.horaInicio} - {reserva.horaFin}</span>
                         </div>
                         <div className="flex items-center gap-2 rounded-2xl bg-slate-900 border border-slate-700 p-3 text-slate-300">
-                          <User className="w-4 h-4 text-slate-500" />
+                          <User className="w-4 h-4 text-muted" />
                           <span className="text-xs truncate">{reserva.organizador}</span>
                         </div>
                         <div className="flex items-center gap-2 rounded-2xl bg-slate-900 border border-slate-700 p-3 text-slate-300">
-                          <Users className="w-4 h-4 text-slate-500" />
+                          <Users className="w-4 h-4 text-muted" />
                           <span className="text-xs">{asistentes.length} / {capacidadMaxima}</span>
                         </div>
                       </div>
@@ -251,12 +232,9 @@ export function ListaReservas({
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => {
-                          if (window.confirm(`¿Eliminar "${reserva.titulo}"?`)) {
-                            alEliminar(reserva.id, reserva.organizadorId);
-                          }
-                        }}
-                        className="text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-xl transition-all"
+                        onClick={() => setReservaParaEliminar(reserva)}
+                        aria-label={`Eliminar ${reserva.titulo}`}
+                        className="text-muted hover:text-red-400 hover:bg-red-400/10 rounded-xl transition-all"
                       >
                         <Trash2 className="w-5 h-5" />
                       </Button>
@@ -279,7 +257,7 @@ export function ListaReservas({
                             <div key={a.id} className="flex items-center justify-between p-2 rounded-lg bg-slate-900/50 border border-slate-800">
                               <div className="min-w-0">
                                 <p className="text-xs font-medium text-slate-200 truncate">{a.nombre}</p>
-                                <p className="text-[10px] text-slate-500 truncate">{a.email}</p>
+                                <p className="text-[10px] text-muted truncate">{a.email}</p>
                               </div>
                               <Button
                                 variant="ghost"
@@ -301,6 +279,37 @@ export function ListaReservas({
           })
         )}
       </div>
+      <AlertDialog
+        open={Boolean(reservaParaEliminar)}
+        onOpenChange={(open) => {
+          if (!open) setReservaParaEliminar(null);
+        }}
+      >
+        <AlertDialogContent className="border-red-400/20 bg-slate-950 text-slate-100">
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar esta reserva?</AlertDialogTitle>
+            <AlertDialogDescription className="text-slate-400">
+              Se eliminará &quot;{reservaParaEliminar?.titulo}&quot; y esta acción no se puede deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setReservaParaEliminar(null)}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 text-white hover:bg-red-700"
+              onClick={async () => {
+                if (!reservaParaEliminar) return;
+                const reserva = reservaParaEliminar;
+                setReservaParaEliminar(null);
+                await alEliminar(reserva.id, reserva.organizadorId);
+              }}
+            >
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </section>
   );
 }

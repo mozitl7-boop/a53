@@ -6,7 +6,7 @@ import { createClient, SupabaseClient } from "@supabase/supabase-js";
 // fuera del frontend.
 
 const url = process.env.SUPABASE_URL || "";
-const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE || "";
+const key = process.env.SUPABASE_SECRET_KEY || "";
 
 export const supabaseAdmin: SupabaseClient = createClient(url, key, {
   auth: {

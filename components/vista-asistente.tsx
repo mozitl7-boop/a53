@@ -1,12 +1,8 @@
 "use client";
 
-import type React from "react";
-
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useRealtimeSync } from "@/hooks/useRealtimeSync";
@@ -20,7 +16,6 @@ import {
   CheckCircle2,
   AlertCircle,
   Armchair,
-  Mail,
   User,
   Eye,
   X,
@@ -43,17 +38,16 @@ type PropiedadesVistaAsistente = {
     nombre: string,
     email: string
   ) => Promise<{ exito: boolean; mensaje: string; asiento?: number }>;
+  abrirFiltrosSolicitud?: number;
 };
 
 export function VistaAsistente({
   reservas,
   asistentesRegistrados,
   onRegisterAttendee,
+  abrirFiltrosSolicitud = 0,
 }: PropiedadesVistaAsistente) {
   const { toast } = useToast();
-  const [dialogsAbiertos, setDialogsAbiertos] = useState<
-    Record<string, boolean>
-  >({});
   const [detalleAsientoAbierto, setDetalleAsientoAbierto] = useState<
     string | null
   >(null);
@@ -295,10 +289,6 @@ export function VistaAsistente({
 
   const totalEventos = eventosActuales.length;
 
-  const setDialogAbierto = (reservaId: string, abierto: boolean) => {
-    setDialogsAbiertos((prev) => ({ ...prev, [reservaId]: abierto }));
-  };
-
   const obtenerEstadoEvento = (reserva: { fecha: string; horaInicio: string; horaFin: string }) => {
     const ahora = new Date();
     const inicio = new Date(`${reserva.fecha}T${reserva.horaInicio}:00`);
@@ -324,9 +314,7 @@ export function VistaAsistente({
     }
   };
 
-  const manejarRegistro = (reservaId: string) => async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const manejarRegistro = async (reservaId: string) => {
     // Prevenir múltiples envíos simultáneos
     if (isSubmittingByEvent[reservaId]) {
       return;
@@ -345,8 +333,6 @@ export function VistaAsistente({
           title: "Registro exitoso",
           description: `${resultado.mensaje}. Te esperamos en el evento.`,
         });
-        setDialogAbierto(reservaId, false);
-        setDatosFormulario({ nombre: "", email: "" });
       } else {
         toast({
           title: "Error al registrar",
@@ -360,12 +346,12 @@ export function VistaAsistente({
   };
 
   return (
-    <div className="space-y-5">
+    <div className="flex flex-col gap-5">
       {misRegistros.length > 0 && (
-        <Card className="p-5 rounded-2xl shadow-[0_25px_50px_-30px_rgba(15,23,42,0.85)] bg-slate-950/95 border border-slate-800">
+        <Card id="asistente-mis-registros" className="order-2 mx-auto w-full max-w-6xl scroll-mt-6 rounded-2xl border border-slate-800 bg-slate-950/95 p-4 shadow-[0_25px_50px_-30px_rgba(15,23,42,0.85)] md:p-6">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between mb-4">
             <div>
-              <h2 className="text-3xl font-bold text-white tracking-tight">Mis Registros</h2>
+              <h2 className="text-2xl font-bold tracking-tight text-white md:text-2xl">Mis Registros</h2>
               <p className="mt-1 text-xs text-slate-200 max-w-xl">
                 Eventos a los que estás registrado. Aquí verás tus asientos asignados y los detalles clave.
               </p>
@@ -428,7 +414,7 @@ export function VistaAsistente({
                       Ver detalles
                     </Button>
                   </div>
-                  <h3 className="text-2xl font-bold text-white leading-tight mb-3 line-clamp-2">
+                  <h3 className="mb-3 line-clamp-2 text-xl font-bold leading-tight text-white">
                     {reserva.titulo}
                   </h3>
                   <div className="grid grid-cols-1 gap-3 text-sm text-slate-300">
@@ -452,12 +438,15 @@ export function VistaAsistente({
         </Card>
       )}
 
-      <BuscadorEventos 
+      <div id="asistente-eventos" className="order-1 mx-auto w-full max-w-6xl">
+      <BuscadorEventos
         alBuscar={(filtros) => setFiltrosActivos(filtros)}
         alLimpiar={() => setFiltrosActivos(null)}
+        abrirFiltrosSolicitud={abrirFiltrosSolicitud}
       />
+      </div>
 
-      <Card className="p-5 rounded-2xl shadow-[0_20px_45px_-25px_rgba(15,23,42,0.7)] bg-slate-950/95 border border-slate-800">
+      <Card id="asistente-eventos-disponibles" className="order-1 mx-auto w-full max-w-6xl scroll-mt-6 rounded-2xl border border-slate-800 bg-slate-950/95 p-4 shadow-[0_20px_45px_-25px_rgba(15,23,42,0.7)] md:p-6">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between mb-4 pb-3 border-b border-slate-800">
           <div className="flex items-center gap-2">
             <div className="p-2 bg-slate-900 rounded-xl">
@@ -502,14 +491,9 @@ export function VistaAsistente({
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {eventosFiltrados.map((reserva) => {
               const asientosOcupados = obtenerAsientosOcupados(reserva.id);
-              const servidor = conteosServidor[reserva.id];
-              const capacidadAuditorio = obtenerCapacidadMaxima(reserva);
-              const capacidadMaxima = capacidadAuditorio;
-              const displayedOcupados =
-                servidor && typeof servidor.ocupados === "number"
-                  ? servidor.ocupados
-                  : asientosOcupados;
-              const porcentajeOcupacion = (displayedOcupados / Math.max(1, capacidadMaxima)) * 100;
+              const capacidadMaxima = obtenerCapacidadMaxima(reserva);
+              const porcentajeOcupacion =
+                (asientosOcupados / Math.max(1, capacidadMaxima)) * 100;
               const yaRegistrado = registrosActuales.some(
                 (a) =>
                   a.reservaId === reserva.id &&
@@ -524,7 +508,7 @@ export function VistaAsistente({
                 >
                   <div className="flex flex-col gap-2 mb-3">
                     <div className="min-w-0">
-                      <h3 className="text-lg font-bold text-white leading-tight line-clamp-2">
+                      <h3 className="line-clamp-2 text-xl font-bold leading-tight text-white">
                         {reserva.titulo}
                       </h3>
                       <p className="mt-1 text-xs text-slate-300 line-clamp-1">
@@ -611,143 +595,37 @@ export function VistaAsistente({
                       </span>
                     </div>
                   ) : (
-                    <>
-                      {!dialogsAbiertos[reserva.id] ? (
-                        <Button
-                          onClick={() => {
-                            const s = conteosServidor[reserva.id];
-                            // Only treat server counts as authoritative when capacidad is a positive number
-                            if (
-                              s &&
-                              typeof s.capacidad === "number" &&
-                              s.capacidad > 0 &&
-                              s.ocupados >= s.capacidad
-                            ) {
-                              toast({
-                                title: "Evento completo",
-                                description:
-                                  "Lo sentimos, ya no quedan asientos disponibles.",
-                                variant: "destructive",
-                              });
-                              return;
-                            }
-                            setDialogAbierto(reserva.id, true);
-                          }}
-                          className={`w-full text-white font-semibold rounded-lg shadow-sm transition-all text-sm py-2 mt-auto ${
-                            reserva.auditorio === "A"
-                              ? "bg-orange-500 hover:bg-orange-400"
-                              : "bg-purple-600 hover:bg-purple-500"
-                          }`}
-                        >
-                          <UserPlus className="w-3.5 h-3.5 mr-2" />
-                          Registrarme
-                        </Button>
-                      ) : (
-                        <div className="mt-3 p-4 rounded-2xl shadow-lg bg-slate-950/95 border border-slate-800">
-                          <h3 className="text-base font-bold mb-1.5 text-white">
-                            Registro al Evento
-                          </h3>
-                          <p className="mb-3 text-slate-300 text-xs">
-                            Completa tus datos para registrarte a "{reserva.titulo}"
-                          </p>
-                          <form
-                            onSubmit={manejarRegistro(reserva.id)}
-                            className="space-y-3"
-                          >
-                            <div>
-                              <Label
-                                htmlFor={`nombre-${reserva.id}`}
-                                className="text-xs font-semibold flex items-center gap-1.5 text-slate-100"
-                              >
-                                <User className="w-3.5 h-3.5 text-slate-300" />
-                                Nombre Completo
-                              </Label>
-                              <Input
-                                id={`nombre-${reserva.id}`}
-                                value={datosFormulario.nombre}
-                                onChange={(e) =>
-                                  setDatosFormulario({
-                                    ...datosFormulario,
-                                    nombre: e.target.value,
-                                  })
-                                }
-                                placeholder="Tu nombre"
-                                className="mt-1.5 rounded-lg bg-gray-100 text-sm"
-                                readOnly
-                              />
-                              <p className="text-xs text-gray-500 mt-0.5">
-                                Datos de tu perfil (no editables)
-                              </p>
-                            </div>
-                            <div>
-                              <Label
-                                htmlFor={`email-${reserva.id}`}
-                                className="text-xs font-semibold flex items-center gap-1.5 text-slate-100"
-                              >
-                                <Mail className="w-3.5 h-3.5 text-slate-300" />
-                                Correo Electrónico
-                              </Label>
-                              <Input
-                                id={`email-${reserva.id}`}
-                                type="email"
-                                value={datosFormulario.email}
-                                onChange={(e) =>
-                                  setDatosFormulario({
-                                    ...datosFormulario,
-                                    email: e.target.value,
-                                  })
-                                }
-                                placeholder="tu@email.com"
-                                className="mt-1.5 rounded-lg bg-gray-100 text-sm"
-                                readOnly
-                              />
-                              <p className="text-xs text-gray-500 mt-0.5">
-                                Datos de tu perfil (no editables)
-                              </p>
-                            </div>
-                            <div className="flex items-start gap-2 p-2.5 bg-slate-900 rounded-lg text-xs text-slate-300 border border-slate-700">
-                              <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0 text-cyan-300" />
-                              <p>
-                                Se te asignará automáticamente el siguiente
-                                asiento disponible en orden de llegada.
-                              </p>
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                              <Button
-                                type="submit"
-                                disabled={Boolean(
-                                  (() => {
-                                    const s = conteosServidor[reserva.id];
-                                    return (
-                                      s &&
-                                      typeof s.capacidad === "number" &&
-                                      s.capacidad > 0 &&
-                                      s.ocupados >= s.capacidad
-                                    );
-                                  })() || isSubmittingByEvent[reserva.id]
-                                )}
-                                className="w-full bg-primary text-white font-semibold rounded-lg shadow-sm disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-md transition-all text-sm py-2"
-                              >
-                                {isSubmittingByEvent[reserva.id]
-                                  ? "Registrando..."
-                                  : "Confirmar"}
-                              </Button>
-                              <Button
-                                type="button"
-                                variant="outline"
-                                className="w-full text-sm py-2"
-                                disabled={isSubmittingByEvent[reserva.id]}
-                                onClick={() =>
-                                  setDialogAbierto(reserva.id, false)
-                                }
-                              >
-                                Cancelar
-                              </Button>
-                            </div>
-                          </form>
-                        </div>
-                      )}
-                    </>
+                    <Button
+                      onClick={() => {
+                        const s = conteosServidor[reserva.id];
+                        if (!datosFormulario.email) {
+                          toast({
+                            title: "Sesión no lista",
+                            description: "Espera a que carguen tus datos de usuario.",
+                            variant: "destructive",
+                          });
+                          return;
+                        }
+                        if (s && s.capacidad > 0 && s.ocupados >= s.capacidad) {
+                          toast({
+                            title: "Evento completo",
+                            description: "Lo sentimos, ya no quedan asientos disponibles.",
+                            variant: "destructive",
+                          });
+                          return;
+                        }
+                        void manejarRegistro(reserva.id);
+                      }}
+                      disabled={Boolean(isSubmittingByEvent[reserva.id])}
+                      className={`w-full text-white font-semibold rounded-lg shadow-sm transition-all text-sm py-2 mt-auto disabled:opacity-50 ${
+                        reserva.auditorio === "A"
+                          ? "bg-orange-500 hover:bg-orange-400"
+                          : "bg-purple-600 hover:bg-purple-500"
+                      }`}
+                    >
+                      <UserPlus className="w-3.5 h-3.5 mr-2" />
+                      {isSubmittingByEvent[reserva.id] ? "Registrando..." : "Registrarme"}
+                    </Button>
                   )}
                 </Card>
               );

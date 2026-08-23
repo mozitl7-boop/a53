@@ -332,14 +332,23 @@ function SidebarInput({
   )
 }
 
-function SidebarHeader({ className, ...props }: React.ComponentProps<'div'>) {
+function SidebarHeader({ className, children, ...props }: React.ComponentProps<'div'>) {
   return (
     <div
       data-slot="sidebar-header"
       data-sidebar="header"
       className={cn('flex flex-col gap-2 p-2', className)}
       {...props}
-    />
+    >
+      <div className="flex items-center gap-3 px-1 py-1">
+        <img
+          src="/logo53.png"
+          alt="A53"
+          className="size-11 shrink-0 rounded-xl object-cover ring-1 ring-white/10"
+        />
+      </div>
+      {children}
+    </div>
   )
 }
 

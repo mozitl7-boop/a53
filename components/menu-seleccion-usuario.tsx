@@ -1,6 +1,7 @@
 "use client";
 
-import { Users, UserPlus, Building2 } from "lucide-react";
+import { Users, UserPlus, Building2, Key } from "lucide-react";
+import Link from "next/link";
 
 type MenuSeleccionUsuarioProps = {
   alSeleccionar: (tipo: "organizador" | "asistente") => void;
@@ -19,7 +20,7 @@ export function MenuSeleccionUsuario({
           <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
             A53 - Sistema de Reservas
           </h1>
-          <p className="text-xl text-gray-600">
+          <p className="text-xl text-muted">
             Selecciona el tipo de usuario para continuar
           </p>
         </div>
@@ -37,17 +38,17 @@ export function MenuSeleccionUsuario({
                 <Users className="w-8 h-8 text-white" />
               </div>
 
-              <h2 className="text-2xl font-bold mb-3 text-gray-800">
+              <h2 className="text-2xl font-bold mb-3 text-foreground">
                 Organizar Conferencia
               </h2>
 
-              <p className="text-gray-600 mb-6 leading-relaxed">
+              <p className="text-muted mb-6 leading-relaxed">
                 Para maestros, investigadores y personal que desean reservar
                 auditorios para eventos, conferencias o clases.
               </p>
 
               <div className="space-y-2 text-left">
-                <div className="flex items-start gap-2 text-sm text-gray-600">
+                <div className="flex items-start gap-2 text-sm text-muted">
                   <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5" />
                   <span>Reservar auditorios </span>
                 </div>
@@ -92,17 +93,17 @@ export function MenuSeleccionUsuario({
                 <UserPlus className="w-8 h-8 text-white" />
               </div>
 
-              <h2 className="text-2xl font-bold mb-3 text-gray-800">
+              <h2 className="text-2xl font-bold mb-3 text-foreground">
                 Asistir a Conferencia
               </h2>
 
-              <p className="text-gray-600 mb-6 leading-relaxed">
+              <p className="text-muted mb-6 leading-relaxed">
                 Para estudiantes y público en general que desean registrarse y
                 asistir a conferencias programadas en los auditorios.
               </p>
 
               <div className="space-y-2 text-left">
-                <div className="flex items-start gap-2 text-sm text-gray-600">
+                <div className="flex items-start gap-2 text-sm text-muted">
                   <div className="w-1.5 h-1.5 rounded-full bg-purple-500 mt-1.5" />
                   <span>Ver eventos disponibles</span>
                 </div>
@@ -136,8 +137,30 @@ export function MenuSeleccionUsuario({
           </button>
         </div>
 
+        <div className="mt-12 bg-[#0f1d3a]/50 border border-blue-500/30 rounded-2xl p-6">
+          <div className="flex items-start gap-4">
+            <div className="flex-shrink-0">
+              <Key className="w-6 h-6 text-blue-400" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-foreground mb-2">
+                ¿Nuevo Organizador?
+              </h3>
+              <p className="text-muted mb-4">
+                Si has recibido un código de invitación de un administrador, puedes crear tu cuenta directamente como organizador.
+              </p>
+              <Link href="/auth/register-organizador">
+                <button className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">
+                  <Key className="w-4 h-4" />
+                  Registrarse con Código de Invitación
+                </button>
+              </Link>
+            </div>
+          </div>
+        </div>
+
         <div className="mt-8 text-center">
-          <p className="text-sm text-gray-500">©</p>
+          <p className="text-sm text-muted">©</p>
         </div>
       </div>
     </div>

@@ -30,7 +30,7 @@ export function FormularioRegistroEvento({
 
   return (
     <div className="mt-4 p-6 rounded-2xl shadow-xl bg-slate-900/95 border border-white/10 backdrop-blur-xl">
-      <h3 className="text-xl font-bold mb-2 text-orange-400">Registrate al Evento</h3>
+      <h3 className="text-xl font-bold mb-2 text-orange-400">Regístrate al Evento</h3>
       <p className="mb-4 text-slate-300 text-sm">
         Completa tus datos para registrarte a <span className="font-semibold">"{titulo}"</span>
       </p>
@@ -47,7 +47,7 @@ export function FormularioRegistroEvento({
             value={nombre}
             disabled
             placeholder="Tu nombre"
-            className="bg-slate-800/50 border-white/10 text-white placeholder:text-slate-500 cursor-not-allowed"
+            className="bg-slate-800/50 border-white/10 text-white placeholder:text-[var(--input-placeholder)] cursor-not-allowed"
           />
           <p className="text-xs text-slate-400">Datos de tu perfil (no editables)</p>
         </div>
@@ -64,7 +64,7 @@ export function FormularioRegistroEvento({
             value={email}
             disabled
             placeholder="tu@email.com"
-            className="bg-slate-800/50 border-white/10 text-white placeholder:text-slate-500 cursor-not-allowed"
+            className="bg-slate-800/50 border-white/10 text-white placeholder:text-[var(--input-placeholder)] cursor-not-allowed"
           />
           <p className="text-xs text-slate-400">Datos de tu perfil (no editables)</p>
         </div>

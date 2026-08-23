@@ -4,10 +4,17 @@
 export async function sendMagicLinkEmail(
   email: string,
   token: string,
-  tipo: "login" | "registro"
+  tipo: "login" | "registro",
+  requestOrigin?: string | null
 ) {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-  const magicLink = `${appUrl}/auth/magic?token=${token}`;
+  const configuredUrl =
+    process.env.NEXT_PUBLIC_APP_URL ||
+    process.env.PUBLIC_APP_URL ||
+    process.env.DEV_TUNNEL_URL ||
+    requestOrigin ||
+    "http://localhost:3000";
+  const appUrl = configuredUrl.replace(/\/$/, "");
+  const magicLink = `${appUrl}/auth/magic?token=${encodeURIComponent(token)}`;
 
   const subject =
     tipo === "registro"
@@ -32,8 +39,8 @@ export async function sendMagicLinkEmail(
               <p style="word-break: break-all; background-color: #f3f4f6; padding: 10px; border-radius: 4px;">
                 ${magicLink}
               </p>
-              <p style="color: #666; font-size: 12px;">
-                Este enlace expira en 24 horas. Si no solicitaste crear una cuenta, ignora este correo.
+                <p style="color: #666; font-size: 12px;">
+                Este enlace expira en 1 hora. Si no solicitaste crear una cuenta, ignora este correo.
               </p>
             </div>
           </body>
@@ -56,7 +63,7 @@ export async function sendMagicLinkEmail(
                 ${magicLink}
               </p>
               <p style="color: #666; font-size: 12px;">
-                Este enlace expira en 24 horas. Si no solicitaste iniciar sesión, ignora este correo.
+                Este enlace expira en 1 hora. Si no solicitaste iniciar sesión, ignora este correo.
               </p>
             </div>
           </body>
@@ -108,8 +115,7 @@ export async function sendMagicLinkEmail(
       throw new Error(`Failed to send email: ${response.status}`);
     }
 
-    const result = await response.json();
-    console.log(`Magic link email enviado a ${email}:`, result);
+    // No loguear el token ni datos sensibles. Retornar éxito/fracaso.
     return true;
   } catch (error: any) {
     console.error("Error enviando magic link:", error);

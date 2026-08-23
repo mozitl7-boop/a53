@@ -5,7 +5,7 @@ import { getUserFromRequest } from "@/lib/auth";
 // Inicializar cliente Supabase del lado servidor usando Service Role
 const supabase = createClient(
   process.env.SUPABASE_URL || "",
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE || ""
+  process.env.SUPABASE_SECRET_KEY || ""
 );
 
 /**
@@ -220,13 +220,22 @@ export async function POST(request: Request) {
       }
 
       // Buscar por email primero
-      const { data: byEmail } = await supabase.from('usuarios').select('id').eq('email', organizador_email).limit(1);
+      const { data: byEmail } = await supabase.from('usuarios').select('id, tipo_usuario').eq('email', organizador_email).limit(1);
       if (byEmail && byEmail.length > 0) {
+        // Usuario existe - verificar que sea organizador
+        if (byEmail[0].tipo_usuario !== 'organizador') {
+          return NextResponse.json({ 
+            success: false, 
+            error: 'El usuario existe pero no es organizador. Debe registrarse primero con un código de invitación.' 
+          }, { status: 403 });
+        }
         finalOrganizadorId = byEmail[0].id;
       } else {
-        const { data: created, error: createErr } = await supabase.from('usuarios').insert([{ nombre: organizador_nombre, email: organizador_email, tipo_usuario: 'organizador' }]).select('id').limit(1);
-        if (createErr) throw createErr;
-        finalOrganizadorId = created && created[0] && created[0].id;
+        // Usuario NO existe - no permitir crear como organizador (debe usar invitación)
+        return NextResponse.json({ 
+          success: false, 
+          error: 'El organizador no existe. Los nuevos organizadores deben registrarse primero con un código de invitación válido.' 
+        }, { status: 403 });
       }
     } else {
       // validar que el id exista y sea organizador

@@ -1,5 +1,5 @@
 -- ==========================
--- 01 - Schema
+-- 01 - Tablas
 -- ==========================
 
 CREATE TABLE IF NOT EXISTS usuarios (
@@ -91,6 +91,30 @@ CREATE INDEX IF NOT EXISTS idx_magic_links_token ON magic_links(token);
 CREATE INDEX IF NOT EXISTS idx_magic_links_email ON magic_links(email);
 CREATE INDEX IF NOT EXISTS idx_magic_links_usuario_id ON magic_links(usuario_id);
 
+-- Índices únicos para evitar duplicados en reservas/asientos
+CREATE UNIQUE INDEX IF NOT EXISTS uq_registros_evento_asiento ON registros_asistentes (id_evento, id_asiento);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_registros_evento_numeroorden ON registros_asistentes (id_evento, numero_orden);
+
+-- ==========================
+-- INVITACIONES DE ORGANIZADORES 
+-- ==========================
+
+CREATE TABLE IF NOT EXISTS invitaciones_organizador (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  codigo VARCHAR(20) UNIQUE NOT NULL,
+  email VARCHAR(100) NOT NULL,
+  creado_por UUID NOT NULL REFERENCES usuarios(id),
+  usado BOOLEAN DEFAULT FALSE,
+  fecha_creacion TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  fecha_expiracion TIMESTAMP WITH TIME ZONE DEFAULT (NOW() + INTE RVAL '7 days'),
+  fecha_uso TIMESTAMP WITH TIME ZONE,
+  usuario_id_creado UUID REFERENCES usuarios(id) ON DELETE SET NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_invitaciones_codigo ON invitaciones_organizador(codigo);
+CREATE INDEX IF NOT EXISTS idx_invitaciones_email ON invitaciones_organizador(email);
+CREATE INDEX IF NOT EXISTS idx_invitaciones_usado ON invitaciones_organizador(usado);
+
 -- ==========================
 -- FUNCIONES
 -- ==========================
@@ -121,7 +145,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 🔥 CORREGIDA
+-- CORREGIDA
 CREATE OR REPLACE FUNCTION asignar_asiento_automatico(
   p_id_evento UUID,
   p_id_asistente UUID
@@ -131,6 +155,8 @@ DECLARE
   v_numero_orden INTEGER;
   v_id_auditorio VARCHAR(10);
 BEGIN
+  -- Adquirir un advisory lock por evento para evitar race conditions
+  PERFORM pg_advisory_xact_lock(hashtext(p_id_evento::text));
   -- evitar duplicados
   IF EXISTS (
     SELECT 1 FROM registros_asistentes

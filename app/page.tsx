@@ -4,7 +4,6 @@ import { useState, useCallback, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { initSocket } from "@/lib/socket";
 import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
 import { FormularioReserva } from "@/components/formulario-reserva";
 import { Calendario } from "@/components/vista-calendario";
 import { ListaReservas } from "@/components/lista-reservas";
@@ -12,6 +11,7 @@ import { EstadoAuditorio } from "@/components/estado-auditorio";
 import { VistaAsistente } from "@/components/vista-asistente";
 import { MenuSeleccionUsuario } from "@/components/menu-seleccion-usuario";
 import { LoginUsuario } from "@/components/login-usuario";
+import { BottomNavigation } from "@/components/bottom-navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Card,
@@ -19,6 +19,7 @@ import {
   CardTitle,
   CardDescription,
   CardContent,
+  CardFooter,
 } from "@/components/ui/card";
 import {
   CalendarIcon,
@@ -26,6 +27,7 @@ import {
   LayoutDashboard,
   Users,
   CalendarDays,
+  LogOut,
 } from "lucide-react";
 
 export type Reserva = {
@@ -71,6 +73,11 @@ export default function Page() {
     organizador: string | null;
     asistente: string | null;
   }>({ organizador: null, asistente: null });
+  const [organizadorVista, setOrganizadorVista] = useState<string>("calendario");
+  const [openReservaMobile, setOpenReservaMobile] = useState(false);
+  const [organizadorFiltrosSolicitud, setOrganizadorFiltrosSolicitud] = useState(0);
+  const [asistenteFiltrosSolicitud, setAsistenteFiltrosSolicitud] = useState(0);
+  const [asistenteSeccion, setAsistenteSeccion] = useState("eventos");
 
   const currentUserId =
     modoUsuario === "organizador"
@@ -79,14 +86,103 @@ export default function Page() {
       ? userIds.asistente
       : null;
 
-  const agregarReserva = (nuevaReserva: Omit<Reserva, "id">) => {
+  const agregarReserva = (
+    nuevaReserva: Omit<Reserva, "id"> & Partial<Pick<Reserva, "id">>
+  ) => {
     const reservaConId: Reserva = {
       ...nuevaReserva,
-      id: Math.random().toString(36).substring(2, 9),
+      id: nuevaReserva.id || crypto.randomUUID(),
       organizadorId: currentUserId || undefined,
     };
-    setReservas([...reservas, reservaConId]);
+    setReservas((prev) => {
+      const existingIndex = prev.findIndex((reserva) => reserva.id === reservaConId.id);
+      if (existingIndex === -1) return [...prev, reservaConId];
+      return prev.map((reserva, index) =>
+        index === existingIndex ? { ...reserva, ...reservaConId } : reserva
+      );
+    });
   };
+
+  const clearSession = () => {
+    setModoUsuario(null);
+    setUserIds({ organizador: null, asistente: null });
+  };
+
+  const handleBottomNavAction = useCallback(
+    (action: string) => {
+      if (modoUsuario === "organizador") {
+        if (action !== "crear") {
+          setOpenReservaMobile(false);
+        }
+        if (action === "calendario" || action === "lista") {
+          setOrganizadorVista(action as "calendario" | "lista");
+        }
+        if (action === "filtros") {
+          setOrganizadorVista("lista");
+          setOrganizadorFiltrosSolicitud((previous) => previous + 1);
+          window.requestAnimationFrame(() => {
+            document.getElementById("organizador-filtros")?.scrollIntoView({
+              behavior: "smooth",
+              block: "start",
+            });
+          });
+        }
+        if (action === "crear") {
+          setOpenReservaMobile(true);
+          window.requestAnimationFrame(() => {
+            document.getElementById("crear-reserva-mobile")?.scrollIntoView({
+              behavior: "smooth",
+              block: "start",
+            });
+          });
+        }
+      } else {
+        if (typeof window === "undefined") return;
+
+        if (action === "eventos") {
+          setAsistenteSeccion("eventos");
+          document.getElementById("asistente-eventos-disponibles")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+        if (action === "mis-registros") {
+          setAsistenteSeccion("mis-registros");
+          document.getElementById("asistente-mis-registros")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+        if (action === "filtros") {
+          setAsistenteSeccion("filtros");
+          setAsistenteFiltrosSolicitud((previous) => previous + 1);
+          document.getElementById("asistente-eventos")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }
+    },
+    [modoUsuario],
+  );
+
+  useEffect(() => {
+    if (modoUsuario !== "asistente" || typeof IntersectionObserver === "undefined") return;
+
+    const sections = [
+      { id: "asistente-eventos-disponibles", section: "eventos" },
+      { id: "asistente-mis-registros", section: "mis-registros" },
+    ];
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if (visible) {
+          const section = sections.find((item) => item.id === visible.target.id)?.section;
+          if (section) setAsistenteSeccion(section);
+        }
+      },
+      { rootMargin: "-12% 0px -55% 0px", threshold: [0.1, 0.5, 0.9] },
+    );
+
+    sections.forEach(({ id }) => {
+      const element = document.getElementById(id);
+      if (element) observer.observe(element);
+    });
+    return () => observer.disconnect();
+  }, [modoUsuario, asistentesRegistrados.length]);
 
   // Cargar eventos iniciales desde la API al montar
   useEffect(() => {
@@ -442,11 +538,12 @@ export default function Page() {
         return false;
       }
       console.info("Deleting evento", { id, callerId });
+      const devHeader: Record<string, string> = process.env.NODE_ENV !== "production" ? { "x-usuario-id": String(callerId || "") } : {};
       const res = await fetch(`/api/eventos/${id}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
-          "x-usuario-id": String(callerId || ""),
+          ...devHeader,
         },
         body: JSON.stringify({ usuario_id: callerId }),
       });
@@ -485,11 +582,12 @@ export default function Page() {
         asistenteId,
         callerId,
       });
+      const devHeader: Record<string, string> = process.env.NODE_ENV !== "production" ? { "x-usuario-id": String(callerId || "") } : {};
       const res = await fetch(`/api/registros-asistentes/${reservaId}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
-          "x-usuario-id": String(callerId || ""),
+          ...devHeader,
         },
         body: JSON.stringify({
           registroId: asistenteId,
@@ -571,58 +669,25 @@ export default function Page() {
 
           const row = json.registro;
 
-          // Después de crear el registro en el servidor, refrescar la lista
-          // completa de registros para este evento desde la API para asegurar
-          // que la UI quede consistente incluso si el realtime no está activo.
-          try {
-            const rres = await fetch(`/api/registros-asistentes/${reservaId}`);
-            const rjson = await rres.json();
-            if (rres.ok && rjson && Array.isArray(rjson.registros)) {
-              const regs = rjson.registros.map((row: any) => ({
-                id: row.id,
-                reservaId: row.id_evento,
-                nombre: row.nombre || row.asistente_nombre || "",
-                email: row.email || row.asistente_email || "",
-                numeroAsiento: row.numero_orden || 0,
-                fechaRegistro:
-                  row.fecha_registro ||
-                  row.fechaRegistro ||
-                  new Date().toISOString(),
-              }));
-              setAsistentesRegistrados(regs);
-              // Obtener el asiento asignado para el mensaje de confirmación
-              const nuevo =
-                regs.find(
-                  (r: any) => r.email === (row.email || "") || r.id === row.id
-                ) || regs[regs.length - 1];
-              return {
-                exito: true,
-                mensaje: `Asiento ${
-                  nuevo ? nuevo.numeroAsiento : row.numero_orden || 0
-                } asignado exitosamente`,
-                asiento: nuevo ? nuevo.numeroAsiento : row.numero_orden || 0,
-              };
-            }
-          } catch (err) {
-            console.error("Error refrescando registros después de POST:", err);
-          }
-
-          // Fallback: si no pudimos refrescar, usar el registro devuelto por la API
-          const nuevoFallback: AsistenteRegistrado = {
+          // El POST ya devuelve el registro normalizado; actualizarlo de inmediato.
+          const nuevoRegistro: AsistenteRegistrado = {
             id: row.id,
-            reservaId: row.id_evento,
-            nombre: row.nombre,
-            email: row.email,
-            numeroAsiento: row.numero_orden || 0,
+            reservaId: row.reservaId || row.eventoId || row.id_evento || reservaId,
+            nombre: row.nombre || nombre,
+            email: row.email || email,
+            numeroAsiento: row.numeroAsiento || row.numero_orden || 0,
             fechaRegistro: row.fecha_registro || new Date().toISOString(),
           };
 
-          setAsistentesRegistrados((prev) => [...prev, nuevoFallback]);
+          setAsistentesRegistrados((prev) => {
+            if (prev.some((registro) => registro.id === nuevoRegistro.id)) return prev;
+            return [...prev, nuevoRegistro];
+          });
 
           return {
             exito: true,
-            mensaje: `Asiento ${nuevoFallback.numeroAsiento} asignado exitosamente`,
-            asiento: nuevoFallback.numeroAsiento,
+            mensaje: `Asiento ${nuevoRegistro.numeroAsiento} asignado exitosamente`,
+            asiento: nuevoRegistro.numeroAsiento,
           };
         } catch (err: any) {
           console.error("Error registrando asistente:", err);
@@ -635,120 +700,214 @@ export default function Page() {
 
   if (modoUsuario === null) {
     return (
-      <div className="min-h-screen bg-[#020617] flex items-center justify-center px-4 overflow-hidden">
-        {/* Luces de fondo decorativas */}
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/10 blur-[120px] rounded-full" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-500/10 blur-[120px] rounded-full" />
-        
-        <div className="w-full max-w-xl relative z-10">
-          <div className="text-center mb-10">
-            <div className="mb-6 flex justify-center">
-              <div className="w-20 h-20 bg-gradient-to-br from-primary to-orange-600 rounded-3xl flex items-center justify-center shadow-2xl rotate-3">
-                <CalendarIcon className="w-10 h-10 text-white" />
+      <div className="relative isolate min-h-screen w-full max-w-full min-w-0 box-border overflow-hidden bg-[#020617] px-4 py-6 sm:px-5 sm:py-8">
+        <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
+          <div className="pointer-events-none hidden sm:block absolute top-[-10%] left-[-10%] h-[40%] w-[40%] rounded-full bg-primary/10 blur-[120px]" />
+          <div className="pointer-events-none hidden sm:block absolute bottom-[-10%] right-[-10%] h-[40%] w-[40%] rounded-full bg-blue-500/10 blur-[120px]" />
+        </div>
+
+        <div className="relative z-10 mx-auto flex w-full max-w-5xl min-w-0 items-center justify-center px-2 sm:px-4">
+          <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:gap-10">
+            <div className="w-full min-w-0 lg:w-1/2">
+              <div className="flex h-full min-h-0 flex-col gap-6 rounded-[2.5rem] border border-white/10 bg-slate-950/20 p-5 shadow-inner shadow-cyan-500/5 sm:p-6 lg:p-5">
+                <div className="inline-flex items-center justify-center rounded-4xl border border-cyan-500/20 bg-cyan-500/5 px-4 py-2 text-sm text-cyan-200 shadow-sm shadow-cyan-500/10 backdrop-blur">
+                  Accede sin contraseña con enlace mágico
+                </div>
+                <div className="flex flex-col items-center gap-5 text-center lg:items-start lg:text-left">
+                  <div className="flex items-center justify-center rounded-4xl bg-linear-to-br from-rose-500/20 to-amber-300/20 p-5 shadow-2xl shadow-rose-500/20 border border-amber-300/30">
+                    <CalendarIcon className="w-14 h-14 text-[#ffc300] sm:w-16 sm:h-16" />
+                  </div>
+                  <div className="w-full max-w-md">
+                    <h1 className="text-4xl font-black tracking-tighter text-white sm:text-5xl md:text-6xl">
+                      A<span className="text-cyan-400">53</span>
+                    </h1>
+                    <p className="mt-3 text-base leading-7 text-slate-400 sm:text-lg">
+                      Gestión de auditorios con una experiencia clara y directa para organizadores y asistentes.
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
-            <h1 className="text-6xl font-black tracking-tighter text-white mb-4">
-              A<span className="text-cyan-400">53</span>
-            </h1>
-            <p className="text-xl text-slate-400 font-medium">
-              Gestión de auditorios del 53 
-            </p>
-          </div>
 
-          <Card className="p-8 border border-white/10 bg-[#0d1425]/60 shadow-3xl backdrop-blur-2xl rounded-[2.5rem]">
-            <LoginUsuario
-              onSelect={(user) => {
-                const tipo = user.tipo_usuario;
-                setUserIds(prev => ({ ...prev, [tipo === 'asistente' ? 'asistente' : 'organizador']: String(user.id) }));
-                setModoUsuario(tipo === "admin" ? "organizador" : (tipo as any));
-              }}
-            />
-          </Card>
+            <div className="w-full min-w-0 lg:w-1/2 flex justify-center">
+              <div className="w-full rounded-[2.5rem] bg-[#0d1425]/75 border border-white/10 shadow-3xl backdrop-blur-2xl overflow-hidden">
+                <div className="absolute inset-0 rounded-[2.5rem] bg-linear-to-br from-cyan-500/10 via-transparent to-blue-500/10 blur-3xl" />
+                <div className="relative">
+                  <Card className="shadow-none border-none bg-transparent rounded-none w-full">
+                    <CardHeader className="space-y-3 px-5 py-5 sm:px-6 sm:py-6 bg-slate-950/20">
+                      <CardTitle>Inicio de sesión</CardTitle>
+                      <CardDescription>
+                        Ingresa con tu correo y recibe un enlace de acceso rápido.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                      <div className="w-full px-4 py-5 sm:px-5 sm:py-6">
+                        <LoginUsuario
+                          onSelect={(user) => {
+                            const tipo = user.tipo_usuario;
+                            setUserIds((prev) => ({
+                              ...prev,
+                              [tipo === "asistente" ? "asistente" : "organizador"]:
+                                String(user.id),
+                            }));
+                            setModoUsuario(tipo === "admin" ? "organizador" : (tipo as any));
+                          }}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#020617] text-slate-200 font-sans selection:bg-primary/30">
-      {/* NAVBAR SIMPLE */}
-      <main className="mx-auto max-w-[1700px] px-6 py-8">
-        {/* DASHBOARD HEADER */}
-        <section className="mb-10"> 
-          <EstadoAuditorio
-            reservas={reservas}
-            fechaSeleccionada={fechaSeleccionada}
-            asistentesRegistrados={asistentesRegistrados}
-            asientosConteo={asientosConteo}
-          />
-        </section>
-
+    <div className="min-h-screen min-w-0 overflow-x-hidden bg-[#020617] font-sans text-slate-200 selection:bg-primary/30">
+      <main className="mx-auto min-w-0 max-w-7xl overflow-x-hidden px-3 py-5 sm:px-6 sm:py-8">
         {modoUsuario === "organizador" ? (
-          <div className="grid xl:grid-cols-[1fr_450px] gap-10 items-start">
+          <div className="grid min-w-0 xl:grid-cols-[minmax(0,1fr)_560px] gap-10 items-start">
             {/* COLUMNA IZQUIERDA: CALENDARIO Y LISTA */}
-            <section className="space-y-6">
-              <Tabs defaultValue="calendario" className="w-full">
-                <TabsList className="inline-flex h-14 items-center justify-center rounded-2xl bg-slate-900/50 p-1.5 text-slate-400 border border-slate-700 mb-6">
-                  <TabsTrigger
-                    value="calendario"
-                    className="inline-flex items-center justify-center whitespace-nowrap rounded-xl px-8 py-2.5 text-sm font-bold transition-all data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-100 data-[state=active]:shadow-sm gap-2"
+            <section className="mx-auto w-full max-w-6xl min-w-0 space-y-6">
+              <Card className="mx-auto w-full min-w-0 overflow-hidden border border-slate-700 bg-slate-950/95 shadow-[0_25px_50px_-30px_rgba(15,23,42,0.85)]">
+                <CardHeader className="space-y-3 border-b border-slate-700/60 px-4 py-4 sm:px-5 sm:py-5">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <CardTitle>Agenda y eventos</CardTitle>
+                      <CardDescription>
+                        Alterna entre el calendario y la lista para administrar tu programación.
+                      </CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="min-w-0 px-2 pb-3 sm:px-5 sm:pb-5">
+                  <Tabs
+                    value={organizadorVista}
+                    onValueChange={(value) => {
+                      setOpenReservaMobile(false);
+                      setOrganizadorVista(value);
+                    }}
+                    className="mx-auto w-full"
                   >
-                    <CalendarIcon className="w-4 h-4" />
-                    Vista de Calendario
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="lista"
-                    className="inline-flex items-center justify-center whitespace-nowrap rounded-xl px-8 py-2.5 text-sm font-bold transition-all data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-100 data-[state=active]:shadow-sm gap-2"
-                  >
-                    <List className="w-4 h-4" />
-                    Lista de Eventos
-                  </TabsTrigger>
-                </TabsList>
+                    <TabsList className="hidden md:inline-flex h-14 items-center justify-center rounded-2xl bg-slate-900/50 p-1.5 text-slate-400 border border-slate-700 mb-6">
+                      <TabsTrigger
+                        value="calendario"
+                        className="inline-flex items-center justify-center whitespace-nowrap rounded-xl px-8 py-2.5 text-sm font-bold transition-all data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-100 data-[state=active]:shadow-sm gap-2"
+                      >
+                        <CalendarIcon className="w-4 h-4" />
+                        Vista de Calendario
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="lista"
+                        className="inline-flex items-center justify-center whitespace-nowrap rounded-xl px-8 py-2.5 text-sm font-bold transition-all data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-100 data-[state=active]:shadow-sm gap-2"
+                      >
+                        <List className="w-4 h-4" />
+                        Lista de Eventos
+                      </TabsTrigger>
+                    </TabsList>
 
-                <TabsContent value="calendario" className="mt-0 outline-none">
-                  <div className="rounded-2xl border border-slate-700 bg-slate-950/95 overflow-hidden shadow-[0_25px_50px_-30px_rgba(15,23,42,0.85)]">
-                    <Calendario
+                    <TabsContent value="calendario" className="mt-0 min-w-0 outline-none">
+                      <Calendario
+                        reservas={reservas}
+                        fechaSeleccionada={fechaSeleccionada}
+                        alCambiarFecha={setFechaSeleccionada}
+                      />
+                    </TabsContent>
+
+                    <TabsContent value="lista" className="mt-0 min-w-0 outline-none">
+                      <ListaReservas
+                        reservas={reservas}
+                        alEliminar={eliminarReserva}
+                        alEliminarAsistente={eliminarAsistente}
+                        asistentesRegistrados={asistentesRegistrados}
+                        usuarioActualId={currentUserId || undefined}
+                        modoUsuario={modoUsuario}
+                        abrirFiltrosSolicitud={organizadorFiltrosSolicitud}
+                      />
+                    </TabsContent>
+                  </Tabs>
+                </CardContent>
+              </Card>
+
+              {openReservaMobile && (
+                <div id="crear-reserva-mobile" className="mx-auto w-full max-w-4xl min-w-0 overflow-x-hidden rounded-2xl border border-cyan-400/30 bg-slate-950/95 p-2 shadow-2xl sm:p-3">
+                  <div className="mb-2 flex items-center justify-between gap-3 px-2">
+                    <div>
+                      <h2 className="text-lg font-semibold text-white">Crear reserva</h2>
+                      <p className="text-xs text-slate-400">Completa los datos del evento.</p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setOpenReservaMobile(false)}
+                    >
+                      Cerrar
+                    </Button>
+                  </div>
+                  <div className="min-w-0 max-h-[calc(100dvh-10rem)] overflow-x-hidden overflow-y-auto overscroll-contain px-0 pb-16">
+                    <FormularioReserva
+                      alEnviar={(reserva) => {
+                        agregarReserva(reserva);
+                        setOpenReservaMobile(false);
+                      }}
                       reservas={reservas}
                       fechaSeleccionada={fechaSeleccionada}
-                      alCambiarFecha={setFechaSeleccionada}
                     />
                   </div>
-                </TabsContent>
-
-                <TabsContent value="lista" className="mt-0 outline-none">
-                  <div className="rounded-2xl border border-slate-700 bg-slate-950/95 p-5 shadow-[0_25px_50px_-30px_rgba(15,23,42,0.85)]">
-                    <ListaReservas
-                      reservas={reservas}
-                      alEliminar={eliminarReserva}
-                      alEliminarAsistente={eliminarAsistente}
-                      asistentesRegistrados={asistentesRegistrados}
-                      usuarioActualId={currentUserId || undefined}
-                      modoUsuario={modoUsuario}
-                    />
-                  </div>
-                </TabsContent>
-              </Tabs>
+                </div>
+              )}
             </section>
 
-            {/* COLUMNA DERECHA: FORMULARIO (Sin títulos repetidos) */}
-            <aside className="sticky top-28">
-              <FormularioReserva
-                alEnviar={agregarReserva}
-                reservas={reservas}
-                fechaSeleccionada={fechaSeleccionada}
-              />
+            <aside className="hidden lg:block">
+              <Card className="overflow-hidden border border-slate-700 bg-slate-950/95 shadow-[0_25px_50px_-30px_rgba(15,23,42,0.85)] sticky top-28">
+                <CardHeader className="space-y-2 border-b border-slate-700/60 px-5 py-5">
+                  <CardTitle>Crear nueva reserva</CardTitle>
+                  <CardDescription>
+                    Añade un evento rápido con los datos esenciales.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="px-6 pb-6">
+                  <div className="w-full max-w-full">
+                    <FormularioReserva
+                      alEnviar={agregarReserva}
+                      reservas={reservas}
+                      fechaSeleccionada={fechaSeleccionada}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
             </aside>
           </div>
         ) : (
-          <div className="max-w-5xl mx-auto">
-            <VistaAsistente
-              reservas={reservas}
-              asistentesRegistrados={asistentesRegistrados}
-              onRegisterAttendee={registrarAsistente}
-            />
+          <div className="mx-auto w-full max-w-6xl" id="asistente-panel">
+            <Card className="overflow-hidden border border-slate-700 bg-slate-950/95 shadow-[0_25px_50px_-30px_rgba(15,23,42,0.85)]">
+              <CardHeader className="space-y-2 border-b border-slate-700/60 px-5 py-5">
+                <CardTitle>Vista de asistente</CardTitle>
+                <CardDescription>
+                  Consulta tus reservas, asientos y registra tu asistencia desde aquí.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-0">
+                <VistaAsistente
+                  reservas={reservas}
+                  asistentesRegistrados={asistentesRegistrados}
+                  onRegisterAttendee={registrarAsistente}
+                  abrirFiltrosSolicitud={asistenteFiltrosSolicitud}
+                />
+              </CardContent>
+            </Card>
           </div>
         )}
       </main>
+      <BottomNavigation
+        role={modoUsuario}
+        active={modoUsuario === "organizador" ? organizadorVista : asistenteSeccion}
+        onAction={handleBottomNavAction}
+      />
     </div>
   );
 }

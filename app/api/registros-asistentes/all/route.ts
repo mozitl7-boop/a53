@@ -4,7 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 // Inicializar cliente Supabase del lado del servidor usando la clave de rol de servicio
 const supabase = createClient(
   process.env.SUPABASE_URL || "",
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE || ""
+  process.env.SUPABASE_SECRET_KEY || ""
 );
 
 /**

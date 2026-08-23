@@ -4,7 +4,7 @@ import { getUserFromRequest } from "@/lib/auth";
 
 const supabase = createClient(
   process.env.SUPABASE_URL || "",
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE || ""
+  process.env.SUPABASE_SECRET_KEY || ""
 );
 
 /**
@@ -87,6 +87,9 @@ export async function POST(
     const body = await request.json();
     const { asistente_id, nombre, email } = body;
     const sessionUser = getUserFromRequest(request);
+    
+    // Declare row variable at function scope to use across try/catch blocks
+    let row: any = null;
 
     // If the caller is authenticated as an asistente (or admin acting as asistente), prefer session identity
     if (
@@ -174,11 +177,69 @@ export async function POST(
       }
     }
 
+    // Intentar usar la función transaccional en Postgres (RPC) para asignar asiento
+    // Esto evita race conditions cuando se ejecuta en el servidor con la Service Role Key.
+    try {
+      const { data: rpcRes, error: rpcErr } = await supabase.rpc("asignar_asiento_automatico", { p_id_evento: eventoId, p_id_asistente: usuarioId });
+      if (!rpcErr && rpcRes) {
+        // Buscar el registro insertado por la función
+        const { data: regs, error: regsErr } = await supabase
+          .from("registros_asistentes")
+          .select("*")
+          .eq("id_evento", eventoId)
+          .eq("id_asistente", usuarioId)
+          .limit(1);
+        if (!regsErr && regs && regs.length > 0) {
+          // Usar el primer registro encontrado como resultado
+          const insertResult = regs[0];
+          // Reusar la lógica existente para construir la respuesta a partir de insertResult
+          // (saltamos el flujo de inserción manual más abajo)
+          row = insertResult;
+          // Obtener datos del usuario para devolver nombre/email
+          const { data: userRows, error: userErr } = await supabase
+            .from("usuarios")
+            .select("nombre,email")
+            .eq("id", usuarioId)
+            .limit(1);
+          if (userErr) console.warn("Warning reading usuario after rpc insert:", userErr);
+          const user = (userRows && userRows[0]) || { nombre: null, email: null };
+
+          const mapped = {
+            id: row.id,
+            eventoId: row.id_evento || eventoId,
+            reservaId: row.id_evento || eventoId,
+            asistenteId: usuarioId,
+            nombre: user.nombre,
+            email: user.email,
+            asientoId: row.id_asiento || null,
+            numero_orden: row.numero_orden || null,
+            numeroAsiento: row.numero_orden || null,
+            fecha_registro: row.fecha_registro,
+            fechaRegistro: row.fecha_registro,
+            estado: row.estado,
+          };
+
+          // Emitir evento y notificaciones como en el flujo normal
+          const { broadcastEvent, computeAndBroadcastAsientosConteo } = await import("@/lib/socketServer");
+          await broadcastEvent("asistente:registrado", mapped);
+          try {
+            await computeAndBroadcastAsientosConteo(mapped.eventoId);
+          } catch (e) {
+            console.error("Error updating asientos:conteo after rpc registro:", e);
+          }
+
+          return NextResponse.json({ success: true, registro: mapped }, { status: 201 });
+        }
+      }
+    } catch (e) {
+      console.warn("RPC asignar_asiento_automatico failed or not available:", e);
+    }
+
     // Asignación de asiento y numero_orden usando Supabase (sin transacciones)
     // Nota: aquí evitamos usar la conexión directa a Postgres y las transacciones
     // para que el código funcione en entornos donde no hay acceso TCP a Postgres.
-    // Riesgo: esto no garantiza atomicidad en concurrencia alta.
-    let row: any = null;
+    // Riesgo: esto no garantiza atomicidad en concurrencia alta. Se intenta RPC antes.
+
     let raEventoCol: string | null = null;
     let raAsistenteCol: string | null = null;
     let raAsientoCol: string | null = null;
@@ -572,12 +633,9 @@ export async function DELETE(
     }
 
     if (!callerUsuarioId) {
-      callerUsuarioId =
-        (request.headers.get("x-usuario-id") as string | null) ||
-        body.usuario_id ||
-        body.userId ||
-        body.user_id ||
-        null;
+      // Only accept x-usuario-id from headers in non-production environments
+      const headerUser = process.env.NODE_ENV !== "production" ? (request.headers.get("x-usuario-id") as string | null) : null;
+      callerUsuarioId = headerUser || body.usuario_id || body.userId || body.user_id || null;
     }
 
     console.info("DELETE /api/registros-asistentes - request received", {

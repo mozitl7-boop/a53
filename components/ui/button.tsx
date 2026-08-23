@@ -9,12 +9,12 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-gradient-to-r from-primary to-primary/80 text-primary-foreground hover:shadow-lg hover:shadow-primary/50 active:scale-95 hover:from-primary hover:to-primary/70",
-        destructive: "bg-gradient-to-r from-destructive to-red-700 text-destructive-foreground hover:shadow-lg hover:shadow-destructive/50 active:scale-95",
-        outline: "border-2 border-primary text-primary bg-transparent hover:bg-primary/10 active:bg-primary/20 hover:shadow-md hover:shadow-primary/30",
-        secondary: "bg-gradient-to-r from-secondary to-purple-600 text-secondary-foreground hover:shadow-lg hover:shadow-secondary/50 active:scale-95",
-        ghost: "bg-transparent text-foreground hover:bg-muted/70 active:bg-muted hover:shadow-md",
-        link: "text-primary underline-offset-4 hover:underline hover:text-primary/80",
+        default: "bg-gradient-to-r from-[var(--primary)] to-[var(--primary)/0.8] text-[var(--primary-foreground)] hover:shadow-lg hover:shadow-[var(--primary)/0.5] active:scale-95 hover:from-[var(--primary)] hover:to-[var(--primary)/0.7]",
+        destructive: "bg-gradient-to-r from-[var(--destructive)] to-[var(--destructive-foreground)] text-[var(--destructive-foreground)] hover:shadow-lg hover:shadow-[var(--destructive)/0.5] active:scale-95",
+        outline: "border-2 border-[var(--primary)] text-[var(--primary)] bg-transparent hover:bg-[var(--primary)/0.1] active:bg-[var(--primary)/0.2] hover:shadow-md hover:shadow-[var(--primary)/0.3]",
+        secondary: "bg-gradient-to-r from-[var(--secondary)] to-[var(--secondary)/0.9] text-[var(--secondary-foreground)] hover:shadow-lg hover:shadow-[var(--secondary)/0.5] active:scale-95",
+        ghost: "bg-transparent text-[var(--foreground)] hover:bg-[var(--muted)/0.7] active:bg-[var(--muted)] hover:shadow-md",
+        link: "text-[var(--primary)] underline-offset-4 hover:underline hover:text-[var(--primary)/0.8]",
       },
       size: {
         default: "h-10 px-6",
@@ -35,19 +35,27 @@ const buttonVariants = cva(
 type ButtonProps = React.ComponentProps<"button"> &
   VariantProps<typeof buttonVariants> & {
     asChild?: boolean;
+    loading?: boolean;
   };
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
+  ({ className, variant, size, asChild = false, loading = false, children, ...props }, ref) => {
     const Comp: any = asChild ? Slot : "button";
 
     return (
       <Comp
         ref={ref}
         data-slot="button"
-        className={cn(buttonVariants({ variant, size, className }))}
+        className={cn(buttonVariants({ variant, size, className }), loading ? "opacity-80 pointer-events-none" : "")}
+        aria-busy={loading ? "true" : undefined}
+        disabled={loading || (props && (props as any).disabled)}
         {...props}
-      />
+      >
+        {loading && (
+          <span className="inline-block mr-2 w-4 h-4 border-2 border-[var(--primary-foreground)] border-t-transparent rounded-full animate-spin" aria-hidden />
+        )}
+        {children}
+      </Comp>
     );
   }
 );

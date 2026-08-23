@@ -40,6 +40,8 @@ function mapEventToTable(eventName: string) {
       return { table: "registros_asistentes", event: "INSERT" };
     case "evento:creado":
       return { table: "eventos", event: "INSERT" };
+    case "evento:eliminado":
+      return { table: "eventos", event: "DELETE" };
     case "asientos:conteo":
       return { table: "asientos_conteo", event: "*" };
     default:
@@ -55,19 +57,16 @@ export function initSocket() {
     connected: false,
     on(event: string, handler: Handler) {
       if (event === "connect") {
-        // call connect immediately once client is available
-        if (client) {
-          this.connected = true;
-          isConnected = true;
+        // store handler for later if needed
+        if (!eventHandlers.has(event)) eventHandlers.set(event, new Set());
+        eventHandlers.get(event)!.add(handler);
+        if (client && isConnected) {
           try {
             handler();
           } catch (e) {
             // ignore
           }
         }
-        // store handler for later if needed
-        if (!eventHandlers.has(event)) eventHandlers.set(event, new Set());
-        eventHandlers.get(event)!.add(handler);
         return;
       }
 
@@ -85,8 +84,9 @@ export function initSocket() {
 
       const { table, event: op } = mapEventToTable(event);
       if (!table) return;
+      const subscriptionKey = `${table}:${op}`;
 
-      if (subscriptions.has(table)) {
+      if (subscriptions.has(subscriptionKey)) {
         // already subscribed, handlers will be invoked
         return;
       }
@@ -112,7 +112,22 @@ export function initSocket() {
         );
 
       try {
-        channel.subscribe();
+        channel.subscribe((status: string) => {
+          if (status === "SUBSCRIBED") {
+            isConnected = true;
+            socket.connected = true;
+            eventHandlers.get("connect")?.forEach((h) => {
+              try {
+                h();
+              } catch (e) {
+                // ignore handler errors
+              }
+            });
+          } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+            isConnected = false;
+            socket.connected = false;
+          }
+        });
         console.info(`[realtime] subscribed to table=${table} event=${op}`);
       } catch (e) {
         console.warn(
@@ -121,7 +136,7 @@ export function initSocket() {
         );
       }
 
-      subscriptions.set(table, { channel, handlers: new Set() });
+      subscriptions.set(subscriptionKey, { channel, handlers: new Set() });
     },
     off(event: string, handler: Handler) {
       const hs = eventHandlers.get(event);
@@ -129,8 +144,8 @@ export function initSocket() {
         hs.delete(handler);
       }
       // if no handlers left for table, unsubscribe
-      const { table } = mapEventToTable(event);
-      const sub = subscriptions.get(table);
+      const { table, event: op } = mapEventToTable(event);
+      const sub = subscriptions.get(`${table}:${op}`);
       if (
         sub &&
         (!eventHandlers.get(event) || eventHandlers.get(event)!.size === 0)
@@ -138,7 +153,7 @@ export function initSocket() {
         try {
           sub.channel.unsubscribe();
         } catch (e) {}
-        subscriptions.delete(table);
+        subscriptions.delete(`${table}:${op}`);
       }
     },
     emit(event: string, payload?: any) {
