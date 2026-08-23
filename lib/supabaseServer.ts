@@ -5,12 +5,26 @@ import { createClient, SupabaseClient } from "@supabase/supabase-js";
 // repetir la inicialización y para mantener la clave Privada
 // fuera del frontend.
 
-const url = process.env.SUPABASE_URL || "";
-const key = process.env.SUPABASE_SECRET_KEY || "";
+function createSupabaseAdmin(): SupabaseClient {
+  const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SECRET_KEY;
 
-export const supabaseAdmin: SupabaseClient = createClient(url, key, {
-  auth: {
-    // No configurar persistencia ni storage en handlers server-side.
+  if (!url || !key) {
+    throw new Error("Supabase server environment variables are not configured");
+  }
+
+  return createClient(url, key, {
+    auth: {
+      // No configurar persistencia ni storage en handlers server-side.
+    },
+  });
+}
+
+export const supabaseAdmin = new Proxy({} as SupabaseClient, {
+  get(_target, property: string | symbol) {
+    const client = createSupabaseAdmin();
+    const value = client[property as keyof SupabaseClient];
+    return typeof value === "function" ? value.bind(client) : value;
   },
 });
 
