@@ -1,11 +1,6 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import supabase from "@/lib/supabaseServer";
 import { getUserFromRequest } from "@/lib/auth";
-
-const supabase = createClient(
-  process.env.SUPABASE_URL || "",
-  process.env.SUPABASE_SECRET_KEY || ""
-);
 
 /**
  * API GET /api/registros-asistentes/[eventoId] — obtener registros de asistentes
