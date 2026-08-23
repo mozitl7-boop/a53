@@ -1,12 +1,7 @@
-import { createClient } from "@supabase/supabase-js";
+import supabase from "@/lib/supabaseServer";
 import { sendMagicLinkEmail } from "@/lib/send-magic-link";
 import crypto from "crypto";
 import { isAllowed } from "@/lib/rateLimiter";
-
-const supabase = createClient(
-  process.env.SUPABASE_URL || "",
-  process.env.SUPABASE_SECRET_KEY || ""
-);
 
 export async function POST(request: Request) {
   const { email, nombre, tipo_usuario } = await request.json();

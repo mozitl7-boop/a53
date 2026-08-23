@@ -1,12 +1,6 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import supabase from "@/lib/supabaseServer";
 import { getUserFromRequest } from "@/lib/auth";
-
-// Inicializar cliente Supabase del lado servidor usando Service Role
-const supabase = createClient(
-  process.env.SUPABASE_URL || "",
-  process.env.SUPABASE_SECRET_KEY || ""
-);
 
 /**
  * API GET /api/eventos — obtener todos los eventos

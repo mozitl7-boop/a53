@@ -1,11 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-// Inicializar cliente Supabase del lado del servidor usando la clave de rol de servicio
-const supabase = createClient(
-  process.env.SUPABASE_URL || "",
-  process.env.SUPABASE_SECRET_KEY || ""
-);
+import supabase from "@/lib/supabaseServer";
 
 /**
  * API GET /api/registros-asistentes/all — obtener todos los registros de asistentes

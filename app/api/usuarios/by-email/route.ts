@@ -1,11 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-// Cliente Supabase server-side para leer usuarios
-const supabase = createClient(
-  process.env.SUPABASE_URL || "",
-  process.env.SUPABASE_SECRET_KEY || ""
-);
+import supabase from "@/lib/supabaseServer";
 
 export async function GET(request: Request) {
   try {
