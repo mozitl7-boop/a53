@@ -2,7 +2,6 @@
 
 import type React from "react";
 import { useState, useEffect } from "react";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,7 +16,6 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import type { Reserva } from "@/app/page";
 import {
-  CalendarIcon,
   AlertCircle,
   CheckCircle2,
   Clock,
@@ -366,27 +364,13 @@ export function FormularioReserva({
     ? (Number.parseInt(datosFormulario.asistentes) / capacidadMaxima) * 100
     : 0;
 
-  const inputGlowClass =
-    datosFormulario.auditorio === "A"
-      ? "focus:border-orange-400 focus:ring-orange-400/40"
-      : "focus:border-purple-400 focus:ring-purple-400/40";
-
-  const fieldClass = `mt-2 rounded-2xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-slate-100 placeholder:text-[var(--input-placeholder)] shadow-sm outline-none transition duration-200 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/30`;
+  const fieldClass = `mt-1 rounded-xl border border-slate-800 bg-[#0f172a] px-3 py-2 text-sm text-slate-100 placeholder:text-[var(--input-placeholder)] shadow-sm outline-none transition duration-200 focus:border-[#f43f5e] focus:ring-2 focus:ring-[#f43f5e]/30`;
 
   return (
-    <Card className="w-full min-w-0 max-w-full rounded-2xl border border-slate-700 bg-slate-950/95 shadow-[0_25px_50px_-30px_rgba(15,23,42,0.85)] flex flex-col max-h-[90vh] overflow-hidden lg:sticky lg:top-4">
-      <div className="flex items-center gap-4 p-5 border-b border-slate-700 shrink-0 bg-slate-950/95">
-        <div className="p-3 rounded-xl bg-cyan-500/20 text-cyan-300">
-          <CalendarIcon className="w-6 h-6" />
-        </div>
-        <div>
-          <h2 className="text-2xl font-bold text-white tracking-tight">Nueva Reserva</h2>
-          <p className="text-sm text-slate-300">Gestión de espacios y eventos</p>
-        </div>
-      </div>
-      <div className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto p-3 scrollbar-custom sm:p-5">
+    <div className="w-full min-w-0 max-w-full flex flex-col max-h-[90vh] overflow-hidden lg:sticky lg:top-4">
+      <div className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto p-0 scrollbar-custom sm:p-1">
         <div className="mx-auto w-full min-w-0 max-w-130">
-          <form id="reserva-form" onSubmit={manejarEnvio} className="grid min-w-0 grid-cols-1 gap-5 md:grid-cols-2">
+          <form id="reserva-form" onSubmit={manejarEnvio} className="grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2">
           
           {/* Selector de Auditorio */}
           <div className="md:col-span-2">
@@ -397,7 +381,7 @@ export function FormularioReserva({
                 onClick={() => establecerDatosFormulario({ ...datosFormulario, auditorio: "A" })}
                 className={`p-4 rounded-xl transition-all border-2 ${
                   datosFormulario.auditorio === "A"
-                    ? "bg-orange-600/20 text-orange-100 border-orange-500/80 shadow-lg shadow-orange-500/20"
+                    ? "bg-[#f97316] text-white border-[#f97316] shadow-lg shadow-orange-500/20"
                     : "bg-slate-900 text-slate-400 border-slate-700 hover:border-slate-600"
                 }`}
               >
@@ -411,7 +395,7 @@ export function FormularioReserva({
                 onClick={() => establecerDatosFormulario({ ...datosFormulario, auditorio: "B" })}
                 className={`p-4 rounded-xl transition-all border-2 ${
                   datosFormulario.auditorio === "B"
-                    ? "bg-purple-600/20 text-purple-100 border-purple-500/80 shadow-lg shadow-purple-500/20"
+                    ? "bg-[#8b5cf6] text-white border-[#8b5cf6] shadow-lg shadow-purple-500/20"
                     : "bg-slate-900 text-slate-400 border-slate-700 hover:border-slate-600"
                 }`}
               >
@@ -632,7 +616,7 @@ export function FormularioReserva({
       </div>
 
       {/* FOOTER FIJO */}
-      <div className="p-5 border-t border-slate-700 bg-slate-950/95 shrink-0">
+      <div className="mt-4 border-t border-slate-800 bg-transparent px-0 pt-4 shrink-0">
         {datosFormulario.horaInicio && (
           <div className={`mb-4 flex items-center gap-3 p-4 rounded-xl text-sm font-bold border ${
             esHorarioDisponible(datosFormulario.horaInicio) 
@@ -648,11 +632,11 @@ export function FormularioReserva({
           form="reserva-form"
           type="submit"
           disabled={enviando || !esHorarioDisponible(datosFormulario.horaInicio)}
-          className="w-full h-14 text-lg font-black rounded-xl bg-cyan-500 text-slate-950 hover:bg-cyan-400 shadow-lg shadow-cyan-500/30 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full h-12 rounded-xl bg-gradient-to-r from-[#e11d48] via-[#f43f5e] to-[#fb7185] text-base font-semibold text-white shadow-lg shadow-rose-500/20 transition-all active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
         >
           {enviando ? "PROCESANDO..." : "CONFIRMAR RESERVACIÓN"}
         </Button>
       </div>
-    </Card>
+    </div>
   );
 }

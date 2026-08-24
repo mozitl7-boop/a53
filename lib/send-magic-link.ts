@@ -8,11 +8,13 @@ export async function sendMagicLinkEmail(
   requestOrigin?: string | null
 ) {
   const configuredUrl =
-    process.env.NEXT_PUBLIC_APP_URL ||
-    process.env.PUBLIC_APP_URL ||
-    process.env.DEV_TUNNEL_URL ||
-    requestOrigin ||
-    "http://localhost:3000";
+    process.env.NODE_ENV !== "production" && requestOrigin
+      ? requestOrigin
+      : process.env.NEXT_PUBLIC_APP_URL ||
+        process.env.PUBLIC_APP_URL ||
+        process.env.DEV_TUNNEL_URL ||
+        requestOrigin ||
+        "http://localhost:3000";
   const appUrl = configuredUrl.replace(/\/$/, "");
   const magicLink = `${appUrl}/auth/magic?token=${encodeURIComponent(token)}`;
 
@@ -109,11 +111,30 @@ export async function sendMagicLinkEmail(
       }),
     });
 
-    if (!response.ok) {
-      const errorData = await response.text();
-      console.error("Mailjet error:", response.status, errorData);
+    const responseText = await response.text();
+    let responseData: any = null;
+    try {
+      responseData = responseText ? JSON.parse(responseText) : null;
+    } catch {
+      // Mailjet should return JSON, but preserve the raw status when it does not.
+    }
+
+    const messageStatus = responseData?.Messages?.[0]?.Status;
+    const messageErrors = responseData?.Messages?.[0]?.Errors;
+    if (!response.ok || (messageStatus && messageStatus !== "success")) {
+      console.error("Mailjet error:", {
+        status: response.status,
+        messageStatus,
+        messageErrors,
+        response: responseData || responseText,
+      });
       throw new Error(`Failed to send email: ${response.status}`);
     }
+
+    console.info("Magic link accepted by Mailjet", {
+      status: response.status,
+      messageStatus: messageStatus || "unknown",
+    });
 
     // No loguear el token ni datos sensibles. Retornar éxito/fracaso.
     return true;

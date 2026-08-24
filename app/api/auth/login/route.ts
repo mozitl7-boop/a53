@@ -26,9 +26,11 @@ export async function POST(req: Request) {
       .limit(1);
     if (userErr) throw userErr;
     const user = users && users[0];
-    if (!user)
+    if (!user) {
+      console.warn("[auth/login] No existe una cuenta para el correo solicitado");
       // Evitar enumeración: responder igual si el usuario no existe
       return NextResponse.json({ message: "Si existe una cuenta con ese correo, se enviará un enlace de acceso." }, { status: 200 });
+    }
 
     // Generar magic link para login, almacenar HASH en BD y usar expiración corta
     const token = crypto.randomBytes(4).toString("hex");
@@ -44,7 +46,15 @@ export async function POST(req: Request) {
     // Enviar el enlace mágico por correo (se envía el token sin hash)
     const requestOrigin = req.headers.get("origin") ||
       `${req.headers.get("x-forwarded-proto") || "http"}://${req.headers.get("host") || "localhost:3000"}`;
-    await sendMagicLinkEmail(email, token, "login", requestOrigin);
+    const emailSent = await sendMagicLinkEmail(email, token, "login", requestOrigin);
+    if (!emailSent) {
+      return NextResponse.json(
+        { error: "No se pudo enviar el enlace de acceso. Verifica la configuración del correo." },
+        { status: 502 }
+      );
+    }
+
+    console.info("[auth/login] Enlace aceptado para envío por Mailjet");
 
     return NextResponse.json(
       {

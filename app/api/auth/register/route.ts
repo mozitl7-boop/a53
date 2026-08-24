@@ -15,7 +15,7 @@ export async function POST(request: Request) {
   if (tipo_usuario && tipo_usuario.toLowerCase() === "organizador") {
     return Response.json(
       { 
-        error: "Los organizadores deben registrarse con un código de invitación válido en /auth/register-organizador" 
+        error: "Los organizadores deben registrarse mediante un código de invitación válido proporcionado por un administrador" 
       }, 
       { status: 403 }
     );

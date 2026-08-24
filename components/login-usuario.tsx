@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -107,16 +106,12 @@ export function LoginUsuario({
   };
 
   return (
-    <div className="w-full max-w-full min-w-0 mx-auto px-0 box-border">
-      <div className="w-full rounded-3xl border border-slate-700/60 bg-slate-950/90 p-4 sm:p-5 shadow-inner shadow-cyan-500/5">
-        <div className="flex flex-col items-center gap-4 w-full">
-          <div className="w-full rounded-full bg-cyan-500/10 px-4 py-3 text-center text-sm font-medium text-cyan-200">
-            Acceso rápido con enlace mágico
-          </div>
-          <div className="grid w-full gap-3 sm:grid-cols-2">
+    <div className="w-full min-w-0 rounded-[1.75rem] border border-[#1e344f] bg-[#0b131f] p-5 shadow-inner shadow-black/20 sm:p-6">
+      <div className="w-full">
+        <div className="grid w-full grid-cols-2 gap-2 border-b border-slate-700/70 pb-3">
             <Button
               variant={tab === "login" ? "default" : "outline"}
-              className="w-full"
+              className={`w-full rounded-xl border font-semibold ${tab === "login" ? "border-[#f43f5e] bg-gradient-to-r from-[#e11d48] via-[#f43f5e] to-[#fb7185] text-white shadow-lg shadow-rose-950/30" : "border-[#1e344f] bg-slate-900/80 text-slate-300 hover:border-[#f43f5e] hover:text-white"}`}
               onClick={() => {
                 setTab("login");
                 setLinkSent(false);
@@ -128,7 +123,7 @@ export function LoginUsuario({
             </Button>
             <Button
               variant={tab === "register" ? "default" : "outline"}
-              className="w-full"
+              className={`w-full rounded-xl border font-semibold ${tab === "register" ? "border-[#f43f5e] bg-gradient-to-r from-[#e11d48] via-[#f43f5e] to-[#fb7185] text-white shadow-lg shadow-rose-950/30" : "border-[#1e344f] bg-slate-900/80 text-slate-300 hover:border-[#f43f5e] hover:text-white"}`}
               onClick={() => {
                 setTab("register");
                 setLinkSent(false);
@@ -138,35 +133,34 @@ export function LoginUsuario({
             >
               Registrarse
             </Button>
-          </div>
         </div>
 
-        <div className="flex flex-col gap-5 w-full mt-4">
+        <div className="mt-6 flex w-full flex-col gap-5">
           {tab === "login" && (
             <div className="flex flex-col gap-4 w-full">
               {linkSent ? (
-                <div className="w-full rounded-3xl border border-blue-400/20 bg-slate-950/80 p-5 text-slate-100 shadow-lg shadow-blue-500/10">
-                  <p className="text-sm">✓ Enviado. Revisa tu correo para continuar.</p>
+                  <div className="w-full rounded-2xl border border-[#1e344f] bg-slate-900/80 p-5 text-slate-100 shadow-lg shadow-rose-950/20">
+                  <p className="text-sm">Enviado. Revisa tu correo para continuar.</p>
                 </div>
               ) : (
                 <div className="flex flex-col gap-4 w-full">
                   <div className="flex flex-col gap-2 w-full">
-                    <Label htmlFor="login-email">Correo</Label>
+                    <Label htmlFor="login-email">Correo electrónico</Label>
                     <Input
                       id="login-email"
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="correo@universidad.edu"
-                      className="w-full"
+                      className="w-full border-[#1e324d] bg-[#111c2d] text-white placeholder:text-slate-500 focus-visible:border-[#f43f5e] focus-visible:ring-[#f43f5e]/30"
                     />
-                    <p className="text-sm text-muted-foreground">Te enviaremos un acceso directo a tu bandeja de entrada.</p>
+                    <p className="text-sm text-slate-300">Te enviaremos un acceso directo a tu bandeja de entrada.</p>
                   </div>
 
                   <Button
                     onClick={submitLogin}
                     disabled={!email || loading}
-                    className="w-full bg-linear-to-r from-[#f081a4] to-[#c41e3a] text-white font-semibold rounded-xl py-2.5 text-base"
+                    className="w-full rounded-xl border border-[#f43f5e] bg-gradient-to-r from-[#e11d48] via-[#f43f5e] to-[#fb7185] py-2.5 text-base font-semibold text-white shadow-lg shadow-rose-950/30 hover:from-[#be123c] hover:via-[#e11d48] hover:to-[#f43f5e]"
                   >
                     {loading ? "Enviando..." : "Enviar enlace de acceso"}
                   </Button>
@@ -178,8 +172,8 @@ export function LoginUsuario({
           {tab === "register" && (
             <div className="flex flex-col gap-4 w-full">
               {linkSent ? (
-                <div className="w-full rounded-3xl border border-emerald-400/20 bg-slate-950/80 p-5 text-slate-100 shadow-lg shadow-emerald-500/10">
-                  <p className="text-sm">✓ Enviado. Revisa tu correo para completar el registro.</p>
+                  <div className="w-full rounded-2xl border border-[#1e344f] bg-slate-900/80 p-5 text-slate-100 shadow-lg shadow-rose-950/20">
+                  <p className="text-sm">Enviado. Revisa tu correo para completar el registro.</p>
                 </div>
               ) : (
                 <div className="flex flex-col gap-4 w-full">
@@ -190,21 +184,21 @@ export function LoginUsuario({
                       value={nombre}
                       onChange={(e) => setNombre(e.target.value)}
                       placeholder="Juan Pérez"
-                      className="w-full"
+                      className="w-full border-[#1e324d] bg-[#111c2d] text-white placeholder:text-slate-500 focus-visible:border-[#f43f5e] focus-visible:ring-[#f43f5e]/30"
                     />
                   </div>
 
                   <div className="flex flex-col gap-2 w-full">
-                    <Label htmlFor="register-email">Correo</Label>
+                    <Label htmlFor="register-email">Correo electrónico</Label>
                     <Input
                       id="register-email"
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="correo@universidad.com"
-                      className="w-full"
+                      className="w-full border-[#1e324d] bg-[#111c2d] text-white placeholder:text-slate-500 focus-visible:border-[#f43f5e] focus-visible:ring-[#f43f5e]/30"
                     />
-                    <p className="text-sm text-muted-foreground">Te enviaremos un acceso directo a tu bandeja de entrada.</p>
+                    <p className="text-sm text-slate-300">Te enviaremos un acceso directo a tu bandeja de entrada.</p>
                   </div>
 
                   <div className="flex flex-col gap-2 w-full">
@@ -223,7 +217,7 @@ export function LoginUsuario({
                   <Button
                     onClick={submitRegister}
                     disabled={!nombre || !email || loading}
-                    className="w-full bg-linear-to-r from-[#f081a4] to-[#c41e3a] text-white font-semibold rounded-xl py-2.5 text-base"
+                    className="w-full rounded-xl border border-[#f43f5e] bg-gradient-to-r from-[#e11d48] via-[#f43f5e] to-[#fb7185] py-2.5 text-base font-semibold text-white shadow-lg shadow-rose-950/30 hover:from-[#be123c] hover:via-[#e11d48] hover:to-[#f43f5e]"
                   >
                     {loading ? "Enviando..." : "Enviar enlace de acceso"}
                   </Button>

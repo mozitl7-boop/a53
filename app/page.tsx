@@ -700,66 +700,45 @@ export default function Page() {
 
   if (modoUsuario === null) {
     return (
-      <div className="relative isolate min-h-screen w-full max-w-full min-w-0 box-border overflow-hidden bg-[#020617] px-4 py-6 sm:px-5 sm:py-8">
-        <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
-          <div className="pointer-events-none hidden sm:block absolute top-[-10%] left-[-10%] h-[40%] w-[40%] rounded-full bg-primary/10 blur-[120px]" />
-          <div className="pointer-events-none hidden sm:block absolute bottom-[-10%] right-[-10%] h-[40%] w-[40%] rounded-full bg-blue-500/10 blur-[120px]" />
-        </div>
-
-        <div className="relative z-10 mx-auto flex w-full max-w-5xl min-w-0 items-center justify-center px-2 sm:px-4">
-          <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:gap-10">
-            <div className="w-full min-w-0 lg:w-1/2">
-              <div className="flex h-full min-h-0 flex-col gap-6 rounded-[2.5rem] border border-white/10 bg-slate-950/20 p-5 shadow-inner shadow-cyan-500/5 sm:p-6 lg:p-5">
-                <div className="inline-flex items-center justify-center rounded-4xl border border-cyan-500/20 bg-cyan-500/5 px-4 py-2 text-sm text-cyan-200 shadow-sm shadow-cyan-500/10 backdrop-blur">
-                  Accede sin contraseña con enlace mágico
-                </div>
-                <div className="flex flex-col items-center gap-5 text-center lg:items-start lg:text-left">
-                  <div className="flex items-center justify-center rounded-4xl bg-linear-to-br from-rose-500/20 to-amber-300/20 p-5 shadow-2xl shadow-rose-500/20 border border-amber-300/30">
-                    <CalendarIcon className="w-14 h-14 text-[#ffc300] sm:w-16 sm:h-16" />
-                  </div>
-                  <div className="w-full max-w-md">
-                    <h1 className="text-4xl font-black tracking-tighter text-white sm:text-5xl md:text-6xl">
-                      A<span className="text-cyan-400">53</span>
-                    </h1>
-                    <p className="mt-3 text-base leading-7 text-slate-400 sm:text-lg">
-                      Gestión de auditorios con una experiencia clara y directa para organizadores y asistentes.
-                    </p>
-                  </div>
-                </div>
-              </div>
+      <div className="relative isolate min-h-screen overflow-hidden bg-[#020617] px-4 py-8 sm:px-6 lg:px-10">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,rgba(244,63,94,0.12),transparent_35%),radial-gradient(circle_at_85%_80%,rgba(148,163,184,0.08),transparent_35%)]" />
+        <div className="relative z-10 mx-auto grid min-h-[calc(100vh-4rem)] w-full max-w-6xl items-center gap-10 lg:grid-cols-[minmax(0,0.9fr)_minmax(420px,1.1fr)] lg:gap-20">
+          <section className="flex flex-col items-center text-center lg:items-start lg:text-left">
+            <div className="mb-8 flex aspect-square h-32 w-32 items-center justify-center sm:h-36 sm:w-36">
+              <img
+                src="/logo53.png"
+                alt="Logo A53"
+                className="h-full w-full object-contain"
+              />
             </div>
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.35em] text-[#f43f5e]">A53</p>
+            <h1 className="max-w-xl bg-gradient-to-r from-white via-white to-[#f43f5e] bg-clip-text text-4xl font-black tracking-tight text-transparent sm:text-5xl lg:text-6xl">
+              Sistema de Reservas
+            </h1>
+            <p className="mt-5 max-w-lg text-base leading-7 text-slate-400 sm:text-lg">
+              Gestión de auditorios con una experiencia clara y directa para organizadores y asistentes.
+            </p>
+          </section>
 
-            <div className="w-full min-w-0 lg:w-1/2 flex justify-center">
-              <div className="w-full rounded-[2.5rem] bg-[#0d1425]/75 border border-white/10 shadow-3xl backdrop-blur-2xl overflow-hidden">
-                <div className="absolute inset-0 rounded-[2.5rem] bg-linear-to-br from-cyan-500/10 via-transparent to-blue-500/10 blur-3xl" />
-                <div className="relative">
-                  <Card className="shadow-none border-none bg-transparent rounded-none w-full">
-                    <CardHeader className="space-y-3 px-5 py-5 sm:px-6 sm:py-6 bg-slate-950/20">
-                      <CardTitle>Inicio de sesión</CardTitle>
-                      <CardDescription>
-                        Ingresa con tu correo y recibe un enlace de acceso rápido.
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="p-0">
-                      <div className="w-full px-4 py-5 sm:px-5 sm:py-6">
-                        <LoginUsuario
-                          onSelect={(user) => {
-                            const tipo = user.tipo_usuario;
-                            setUserIds((prev) => ({
-                              ...prev,
-                              [tipo === "asistente" ? "asistente" : "organizador"]:
-                                String(user.id),
-                            }));
-                            setModoUsuario(tipo === "admin" ? "organizador" : (tipo as any));
-                          }}
-                        />
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              </div>
+          <section className="w-full rounded-[2rem] border border-[#1e344f] bg-[#132338] p-5 shadow-2xl shadow-black/30 backdrop-blur-xl sm:p-8">
+            <div className="mb-6 space-y-2">
+              <h2 className="text-2xl font-bold text-white sm:text-3xl">Iniciar Sesión</h2>
+              <p className="text-sm leading-6 text-slate-400 sm:text-base">
+                Ingresa tu correo institucional para recibir tu enlace de acceso.
+              </p>
             </div>
-          </div>
+            <LoginUsuario
+              onSelect={(user) => {
+                const tipo = user.tipo_usuario;
+                setUserIds((prev) => ({
+                  ...prev,
+                  [tipo === "asistente" ? "asistente" : "organizador"]:
+                    String(user.id),
+                }));
+                setModoUsuario(tipo === "admin" ? "organizador" : (tipo as any));
+              }}
+            />
+          </section>
         </div>
       </div>
     );
@@ -769,7 +748,7 @@ export default function Page() {
     <div className="min-h-screen min-w-0 overflow-x-hidden bg-[#020617] font-sans text-slate-200 selection:bg-primary/30">
       <main className="mx-auto min-w-0 max-w-7xl overflow-x-hidden px-3 py-5 sm:px-6 sm:py-8">
         {modoUsuario === "organizador" ? (
-          <div className="grid min-w-0 xl:grid-cols-[minmax(0,1fr)_560px] gap-10 items-start">
+          <div className="grid min-w-0 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_560px] xl:gap-8">
             {/* COLUMNA IZQUIERDA: CALENDARIO Y LISTA */}
             <section className="mx-auto w-full max-w-6xl min-w-0 space-y-6">
               <Card className="mx-auto w-full min-w-0 overflow-hidden border border-slate-700 bg-slate-950/95 shadow-[0_25px_50px_-30px_rgba(15,23,42,0.85)]">
@@ -783,7 +762,7 @@ export default function Page() {
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent className="min-w-0 px-2 pb-3 sm:px-5 sm:pb-5">
+                <CardContent className="min-w-0 px-1 pb-2 sm:px-3 sm:pb-3">
                   <Tabs
                     value={organizadorVista}
                     onValueChange={(value) => {
@@ -870,7 +849,7 @@ export default function Page() {
                     Añade un evento rápido con los datos esenciales.
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="px-6 pb-6">
+                <CardContent className="px-4 pb-4">
                   <div className="w-full max-w-full">
                     <FormularioReserva
                       alEnviar={agregarReserva}
@@ -886,9 +865,9 @@ export default function Page() {
           <div className="mx-auto w-full max-w-6xl" id="asistente-panel">
             <Card className="overflow-hidden border border-slate-700 bg-slate-950/95 shadow-[0_25px_50px_-30px_rgba(15,23,42,0.85)]">
               <CardHeader className="space-y-2 border-b border-slate-700/60 px-5 py-5">
-                <CardTitle>Vista de asistente</CardTitle>
+                <CardTitle className="text-2xl font-bold text-white">Panel de Asistencia y Reservas</CardTitle>
                 <CardDescription>
-                  Consulta tus reservas, asientos y registra tu asistencia desde aquí.
+                  Explora el catálogo de eventos disponibles, consulta la disponibilidad de asientos y gestiona tus asistencias registradas.
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-0">

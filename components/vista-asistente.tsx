@@ -348,8 +348,8 @@ export function VistaAsistente({
   return (
     <div className="flex flex-col gap-5">
       {misRegistros.length > 0 && (
-        <Card id="asistente-mis-registros" className="order-2 mx-auto w-full max-w-6xl scroll-mt-6 rounded-2xl border border-slate-800 bg-slate-950/95 p-4 shadow-[0_25px_50px_-30px_rgba(15,23,42,0.85)] md:p-6">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between mb-4">
+        <Card id="asistente-mis-registros" className="order-2 mx-auto w-full max-w-6xl scroll-mt-6 rounded-2xl border border-slate-800 bg-slate-950/95 p-3 shadow-[0_25px_50px_-30px_rgba(15,23,42,0.85)] md:p-4">
+          <div className="mb-3 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <h2 className="text-2xl font-bold tracking-tight text-white md:text-2xl">Mis Registros</h2>
               <p className="mt-1 text-xs text-slate-200 max-w-xl">
@@ -375,7 +375,7 @@ export function VistaAsistente({
               </Button>
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
             {misRegistros.map((asistente) => {
               const reserva = eventosActuales.find(
                 (r) => r.id === asistente.reservaId
@@ -391,7 +391,7 @@ export function VistaAsistente({
               return (
                 <div
                   key={asistente.id}
-                  className="rounded-3xl border border-slate-700 bg-slate-950 p-5 shadow-[0_16px_40px_-30px_rgba(15,23,42,0.85)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_20px_60px_-35px_rgba(15,23,42,0.9)] flex flex-col h-full"
+                  className="flex h-full flex-col rounded-2xl border border-slate-800 bg-slate-900/70 p-4 shadow-[0_16px_40px_-30px_rgba(15,23,42,0.85)] transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-700"
                 >
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
                     <div className="flex flex-wrap items-center gap-2">
@@ -405,32 +405,32 @@ export function VistaAsistente({
                         {estado}
                       </Badge>
                     </div>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => setDetalleAsientoAbierto(asistente.id)}
-                      className="h-9 rounded-2xl px-4 text-sm font-semibold bg-blue-600 text-white hover:bg-blue-500 shadow-md transition-all"
-                    >
-                      Ver detalles
-                    </Button>
                   </div>
-                  <h3 className="mb-3 line-clamp-2 text-xl font-bold leading-tight text-white">
+                  <h3 className="mb-3 line-clamp-2 text-lg font-bold capitalize leading-tight text-white">
                     {reserva.titulo}
                   </h3>
                   <div className="grid grid-cols-1 gap-3 text-sm text-slate-300">
                     <div className="flex items-center gap-1.5">
-                      <CalendarIcon className="w-3.5 h-3.5 text-blue-300" />
-                      <span>{formatearFecha(reserva.fecha)}</span>
+                      <CalendarIcon className="w-3.5 h-3.5 text-rose-400" />
+                      <span className="text-sm font-medium text-slate-300">{formatearFecha(reserva.fecha)}</span>
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <Clock className="w-3.5 h-3.5 text-blue-300" />
-                      <span>{reserva.horaInicio} - {reserva.horaFin}</span>
+                      <Clock className="w-3.5 h-3.5 text-rose-400" />
+                      <span className="text-sm font-medium text-slate-300">{reserva.horaInicio} - {reserva.horaFin}</span>
                     </div>
-                    <div className="rounded-2xl bg-slate-800 border border-slate-700 p-3 text-slate-300 flex items-center gap-2">
-                      <User className="w-4 h-4 text-slate-400" />
-                      <span className="text-xs font-medium truncate">{reserva.organizador || "Organizador no asignado"}</span>
+                    <div className="flex items-center gap-2 text-slate-300">
+                      <User className="h-4 w-4 text-rose-400" />
+                      <span className="truncate text-xs text-slate-400 font-medium">Organizador: {reserva.organizador || "No asignado"}</span>
                     </div>
                   </div>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setDetalleAsientoAbierto(asistente.id)}
+                    className="mt-4 w-full justify-center rounded-xl border border-slate-700 text-rose-400 hover:border-rose-400/50 hover:bg-rose-400/10 hover:text-rose-300"
+                  >
+                    Ver detalles
+                  </Button>
                 </div>
               );
             })}
@@ -446,11 +446,11 @@ export function VistaAsistente({
       />
       </div>
 
-      <Card id="asistente-eventos-disponibles" className="order-1 mx-auto w-full max-w-6xl scroll-mt-6 rounded-2xl border border-slate-800 bg-slate-950/95 p-4 shadow-[0_20px_45px_-25px_rgba(15,23,42,0.7)] md:p-6">
+      <Card id="asistente-eventos-disponibles" className="order-1 mx-auto w-full max-w-6xl scroll-mt-6 rounded-2xl border border-slate-800 bg-slate-950/95 p-3 shadow-[0_20px_45px_-25px_rgba(15,23,42,0.7)] md:p-4">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between mb-4 pb-3 border-b border-slate-800">
           <div className="flex items-center gap-2">
-            <div className="p-2 bg-slate-900 rounded-xl">
-              <UserPlus className="w-4 h-4 text-cyan-300" />
+              <div className="rounded-xl bg-slate-900 p-2">
+              <UserPlus className="w-4 h-4 text-rose-400" />
             </div>
             <div>
               <h2 className="text-2xl font-bold text-white">Eventos Disponibles</h2>
@@ -508,11 +508,11 @@ export function VistaAsistente({
                 >
                   <div className="flex flex-col gap-2 mb-3">
                     <div className="min-w-0">
-                      <h3 className="line-clamp-2 text-xl font-bold leading-tight text-white">
+                      <h3 className="line-clamp-2 text-lg font-bold capitalize leading-tight text-white">
                         {reserva.titulo}
                       </h3>
-                      <p className="mt-1 text-xs text-slate-300 line-clamp-1">
-                        Por {reserva.organizador}
+                      <p className="mt-1 text-xs text-slate-400 font-medium line-clamp-1">
+                        Organizador: {reserva.organizador || "No asignado"}
                       </p>
                     </div>
                     <div className="flex flex-wrap items-center gap-1.5">
@@ -534,20 +534,20 @@ export function VistaAsistente({
 
 <div className="space-y-1.5 mb-3 text-xs text-slate-300">
                       <div className="flex items-center gap-1.5 text-slate-300">
-                        <CalendarIcon className="w-3.5 h-3.5 text-blue-300 shrink-0" />
-                        <span className="font-medium line-clamp-1">
+                        <CalendarIcon className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                        <span className="text-sm font-medium text-slate-300 line-clamp-1">
                           {formatearFecha(reserva.fecha)}
                         </span>
                       </div>
                       <div className="flex items-center gap-1.5 text-slate-300">
-                        <Clock className="w-3.5 h-3.5 text-blue-300 shrink-0" />
-                        <span className="font-medium">
+                        <Clock className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                        <span className="text-sm font-medium text-slate-300">
                           {reserva.horaInicio} - {reserva.horaFin}
                         </span>
                       </div>
                       <div className="flex items-center gap-1.5 text-slate-300">
-                        <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                      <span className="font-medium">
+                        <MapPin className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                      <span className="text-sm font-medium text-slate-300">
                         Auditorio {reserva.auditorio}
                       </span>
                     </div>
@@ -562,14 +562,14 @@ export function VistaAsistente({
                   <div className="mb-3">
                     <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between text-xs mb-2 font-medium text-slate-300">
                       <span className="flex items-center gap-1 text-slate-300">
-                        <Armchair className="w-3 h-3 text-slate-400" />
-                        Asientos ocupados
+                        <Armchair className="w-3 h-3 text-rose-400" />
+                        <span className="text-slate-400">Asientos ocupados</span>
                       </span>
                       <span
                         className={
                           porcentajeOcupacion > 80
-                            ? "text-orange-300"
-                            : "text-blue-300"
+                            ? "font-semibold text-slate-200"
+                            : "font-semibold text-slate-200"
                         }
                       >
                         {asientosOcupados}/{capacidadMaxima}
@@ -579,8 +579,8 @@ export function VistaAsistente({
                       <div
                         className={`h-full transition-all duration-300 rounded-full ${
                           porcentajeOcupacion > 80
-                            ? "bg-orange-500"
-                            : "bg-blue-500"
+                            ? "bg-[#f97316]"
+                            : "bg-rose-500"
                         }`}
                         style={{ width: `${porcentajeOcupacion}%` }}
                       />
@@ -589,8 +589,8 @@ export function VistaAsistente({
 
                   {yaRegistrado ? (
                     <div className="flex items-center gap-2 p-3 bg-slate-900 rounded-xl border border-slate-700 mt-auto">
-                      <CheckCircle2 className="w-4 h-4 text-blue-300" />
-                      <span className="text-xs font-semibold text-slate-100">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                      <span className="text-xs font-semibold text-emerald-200">
                         Ya estás registrado
                       </span>
                     </div>
@@ -619,8 +619,8 @@ export function VistaAsistente({
                       disabled={Boolean(isSubmittingByEvent[reserva.id])}
                       className={`w-full text-white font-semibold rounded-lg shadow-sm transition-all text-sm py-2 mt-auto disabled:opacity-50 ${
                         reserva.auditorio === "A"
-                          ? "bg-orange-500 hover:bg-orange-400"
-                          : "bg-purple-600 hover:bg-purple-500"
+                          ? "bg-gradient-to-r from-[#e11d48] via-[#f43f5e] to-[#fb7185] hover:from-[#be123c] hover:via-[#e11d48] hover:to-[#f43f5e]"
+                            : "bg-gradient-to-r from-[#e11d48] via-[#f43f5e] to-[#fb7185] hover:from-[#be123c] hover:via-[#e11d48] hover:to-[#f43f5e]"
                       }`}
                     >
                       <UserPlus className="w-3.5 h-3.5 mr-2" />

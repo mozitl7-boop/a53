@@ -36,7 +36,7 @@ export default function RootLayout({
                   />
                 </div>
                 <div className="flex flex-col gap-0 leading-none text-left">
-                  <p className="text-xs uppercase tracking-[0.35em] text-[#ffc300] font-semibold">
+                  <p className="text-xs uppercase tracking-[0.35em] text-rose-300 font-semibold">
                     A53
                   </p>
                   <div className="text-xs font-semibold tracking-tight text-white sm:text-sm md:text-base">

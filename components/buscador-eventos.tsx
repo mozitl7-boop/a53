@@ -89,19 +89,19 @@ export function BuscadorEventos({
     filtros.carrera !== "todos";
 
   return (
-    <Card className="w-full rounded-2xl bg-white/80 p-4 shadow-xl backdrop-blur-sm md:p-6">
-      <form onSubmit={manejarBusqueda} className="space-y-4">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 bg-linear-to-br from-blue-500 to-cyan-500 rounded-lg shadow-md">
-            <Search className="w-5 h-5 text-white" />
+    <Card className="w-full rounded-2xl border border-slate-800 bg-slate-950/95 p-3 shadow-xl backdrop-blur-sm md:p-4">
+      <form onSubmit={manejarBusqueda} className="space-y-3">
+        <div className="mb-3 flex items-center gap-3">
+          <div className="rounded-lg bg-rose-500/15 p-2 shadow-md shadow-rose-950/20">
+            <Search className="h-5 w-5 text-rose-400" />
           </div>
-          <h3 className="text-2xl font-bold text-white">Buscar Eventos</h3>
+          <h3 className="text-xl font-bold text-white">Buscar Eventos</h3>
           <Button
             type="button"
             variant="ghost"
             size="sm"
             onClick={() => setMostrarFiltros(!mostrarFiltros)}
-            className="ml-auto hidden rounded-lg hover:bg-blue-50 md:inline-flex"
+            className="ml-auto hidden rounded-lg text-slate-300 hover:bg-rose-500/10 hover:text-white md:inline-flex"
           >
             <Filter className="w-4 h-4 mr-2" />
             {mostrarFiltros ? "Ocultar" : "Filtros"}
@@ -111,7 +111,7 @@ export function BuscadorEventos({
             variant="ghost"
             size="sm"
             onClick={() => setMobileFiltersOpen(true)}
-            className="ml-auto inline-flex rounded-lg hover:bg-blue-50 md:hidden"
+            className="ml-auto inline-flex rounded-lg text-slate-300 hover:bg-rose-500/10 hover:text-white md:hidden"
           >
             <Filter className="w-4 h-4 mr-2" />
             Filtros
@@ -128,12 +128,12 @@ export function BuscadorEventos({
               onChange={(e) =>
                 setFiltros({ ...filtros, textoBusqueda: e.target.value })
               }
-              className="pl-10 rounded-lg shadow-sm"
+              className="rounded-lg border-slate-800 bg-slate-900/80 pl-10 shadow-sm focus-visible:border-rose-500 focus-visible:ring-rose-500/30"
             />
           </div>
           <Button
             type="submit"
-            className="px-6 rounded-lg shadow-md bg-linear-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white"
+            className="rounded-lg bg-gradient-to-r from-[#e11d48] via-[#f43f5e] to-[#fb7185] px-5 text-white shadow-md shadow-rose-950/30 hover:from-[#be123c] hover:via-[#e11d48] hover:to-[#f43f5e]"
           >
             Buscar
           </Button>
@@ -142,7 +142,7 @@ export function BuscadorEventos({
               type="button"
               variant="ghost"
               onClick={limpiarFiltros}
-              className="px-4 rounded-lg hover:bg-red-50 hover:text-red-600"
+              className="rounded-lg px-3 text-slate-400 hover:bg-rose-500/10 hover:text-rose-300"
             >
               <X className="w-4 h-4" />
             </Button>
