@@ -3,7 +3,7 @@ import supabase from "@/lib/supabaseServer";
 
 /**
  * GET /api/registros-asistentes/conteo/[eventoId]
- * Devuelve el conteo actual de asientos ocupados y la capacidad del auditorio
+ * Devuelve el conteo actual de amaisientos ocupados y la capacidad del auditorio
  * para el evento especificado. Responde con payload similar a `asientos:conteo`.
  */
 export async function GET(

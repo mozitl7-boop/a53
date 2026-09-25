@@ -77,9 +77,9 @@ export function FormularioReserva({
     auditorio: "A" as "A" | "B",
     fecha: obtenerFechaMinima(),
     horaInicio: "09:00",
+    horaFin: "10:00",
     titulo: "",
     organizador: "",
-    organizador_email: "",
     descripcion: "",
     asistentes: "",
     carrera: "no-especificado",
@@ -160,17 +160,12 @@ export function FormularioReserva({
       return;
     }
 
-    const [hora, minuto] = datosFormulario.horaInicio.split(":").map(Number);
-    const horaFin = hora + 1;
-    const horaFinTexto = `${String(horaFin).padStart(2, "0")}:${String(
-      minuto
-    ).padStart(2, "0")}`;
-
     const validador = crearValidadorReservas(reservas);
     const validacion = validador.validar({
       auditorio: datosFormulario.auditorio,
       fecha: datosFormulario.fecha,
       horaInicio: datosFormulario.horaInicio,
+      horaFin: datosFormulario.horaFin,
       asistentes: Number.parseInt(datosFormulario.asistentes) || 0,
       titulo: datosFormulario.titulo,
     });
@@ -204,19 +199,14 @@ export function FormularioReserva({
         body: JSON.stringify({
           // auditorio_id debe ser el id de auditorios ('A' o 'B')
           id_auditorio: datosFormulario.auditorio,
-          // enviar el organizador seleccionado (UUID) o el nombre si es libre
-          id_organizador: organizadorId || null,
-          organizador_nombre: !organizadorId
-            ? datosFormulario.organizador
-            : null,
-          organizador_email: !organizadorId
-            ? datosFormulario.organizador_email
-            : null,
+          ponente_nombre: organizadorLibre
+            ? datosFormulario.organizador.trim()
+            : organizadores.find((organizador) => organizador.id === organizadorId)?.nombre || null,
           titulo: datosFormulario.titulo,
           descripcion: datosFormulario.descripcion,
           fecha: datosFormulario.fecha,
           hora_inicio: datosFormulario.horaInicio,
-          hora_fin: horaFinTexto,
+          hora_fin: datosFormulario.horaFin,
           asistentes_esperados:
             Number.parseInt(datosFormulario.asistentes) || 0,
           tipo_evento:
@@ -248,9 +238,9 @@ export function FormularioReserva({
                   auditorio: String(result.evento.id_auditorio || result.evento.auditorio || datosFormulario.auditorio) as "A" | "B",
                   fecha: (result.evento.fecha || datosFormulario.fecha).substring(0, 10),
                   horaInicio: (result.evento.hora_inicio || datosFormulario.horaInicio).toString().substring(0, 5),
-                  horaFin: (result.evento.hora_fin || horaFinTexto).toString().substring(0, 5),
+                  horaFin: (result.evento.hora_fin || datosFormulario.horaFin).toString().substring(0, 5),
                   titulo: result.evento.titulo || datosFormulario.titulo,
-                  organizador: result.evento.organizador_nombre || datosFormulario.organizador || "",
+                  organizador: result.evento.organizador_nombre || result.evento.organizador || datosFormulario.organizador || "",
                   organizadorId: result.evento.id_organizador || organizadorId || undefined,
                   descripcion: result.evento.descripcion || datosFormulario.descripcion || "",
                   asistentes: Number((result.evento.asistentes_esperados ?? Number.parseInt(datosFormulario.asistentes)) || 0),
@@ -262,7 +252,7 @@ export function FormularioReserva({
                   auditorio: datosFormulario.auditorio,
                   fecha: datosFormulario.fecha,
                   horaInicio: datosFormulario.horaInicio,
-                  horaFin: horaFinTexto,
+                  horaFin: datosFormulario.horaFin,
                   titulo: datosFormulario.titulo,
                   organizador: datosFormulario.organizador || "",
                   descripcion: datosFormulario.descripcion || "",
@@ -283,9 +273,9 @@ export function FormularioReserva({
           auditorio: "A",
           fecha: obtenerFechaMinima(),
           horaInicio: "09:00",
+          horaFin: "10:00",
           titulo: "",
           organizador: "",
-          organizador_email: "",
           descripcion: "",
           asistentes: "",
           carrera: "no-especificado",
@@ -297,16 +287,14 @@ export function FormularioReserva({
           const c = result.conflict;
           toast({
             title: "Horario no disponible",
-            description: `Ya existe '${c.titulo}' por ${
-              c.organizador_nombre || c.organizador_email
-            } a las ${c.hora_inicio?.substring(0, 5)}`,
+            description: `Ya existe '${c.titulo}' de ${c.hora_inicio?.substring(0, 5)} a ${c.hora_fin?.substring(0, 5)}.`,
             variant: "destructive",
           });
 
           // Solicitar sugerencias de horarios libres (3) y mostrarlas si hay
           try {
             const sugRes = await fetch(
-              `/api/eventos/horarios-libres?auditorio_id=${datosFormulario.auditorio}&fecha=${datosFormulario.fecha}&limit=3`
+              `/api/eventos/horarios-libres?auditorio_id=${datosFormulario.auditorio}&fecha=${datosFormulario.fecha}&duracion_minutos=${obtenerDuracionMinutos()}&limit=3`
             );
             const sugJson = await sugRes.json();
             if (
@@ -346,8 +334,15 @@ export function FormularioReserva({
     const validador = crearValidadorReservas(reservas);
     return validador.obtenerHorariosDisponibles(
       datosFormulario.auditorio,
-      datosFormulario.fecha
+      datosFormulario.fecha,
+      obtenerDuracionMinutos()
     );
+  };
+
+  const obtenerDuracionMinutos = () => {
+    const [inicioHora, inicioMinuto] = datosFormulario.horaInicio.split(":").map(Number);
+    const [finHora, finMinuto] = datosFormulario.horaFin.split(":").map(Number);
+    return finHora * 60 + finMinuto - (inicioHora * 60 + inicioMinuto);
   };
 
   const esHorarioDisponible = (hora: string) => {
@@ -355,7 +350,8 @@ export function FormularioReserva({
     return validador.estaHorarioDisponible(
       datosFormulario.auditorio,
       datosFormulario.fecha,
-      hora
+      hora,
+      datosFormulario.horaFin
     );
   };
 
@@ -424,7 +420,7 @@ export function FormularioReserva({
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="horaInicio" className="text-base font-semibold flex items-center gap-2 text-white">
-                <Clock className="w-5 h-5" /> Horario
+                <Clock className="w-5 h-5" /> Hora de inicio
               </Label>
               <Button
                 type="button"
@@ -444,6 +440,19 @@ export function FormularioReserva({
               className={`${fieldClass} text-base h-12`}
               required
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="horaFin" className="text-base font-semibold text-white">Hora de fin</Label>
+            <Input
+              id="horaFin"
+              type="time"
+              value={datosFormulario.horaFin}
+              onChange={(e) => establecerDatosFormulario({ ...datosFormulario, horaFin: e.target.value })}
+              className={`${fieldClass} text-base h-12`}
+              required
+            />
+            <p className="text-xs text-slate-400">Puedes personalizar la duración. El evento debe terminar a más tardar a las 17:00.</p>
           </div>
 
           {/* Menú Desplegable de Horarios */}
@@ -482,7 +491,8 @@ export function FormularioReserva({
 
           {/* Organizador */}
           <div className="md:col-span-2 space-y-2">
-            <Label className="text-base font-semibold text-white">Responsable / Organizador</Label>
+            <Label className="text-base font-semibold text-white">Ponente / Organizador</Label>
+            <p className="text-xs text-slate-400">Puedes asignar la conferencia a otro organizador; no tiene que ser quien crea la reserva.</p>
             <Select
               value={organizadorId}
               onValueChange={(val) => {
@@ -491,7 +501,7 @@ export function FormularioReserva({
               }}
             >
               <SelectTrigger className={`${fieldClass} text-base h-12`}>
-                <SelectValue placeholder="Seleccione un responsable" />
+                <SelectValue placeholder="Seleccione un ponente" />
               </SelectTrigger>
               <SelectContent className="bg-slate-900 border border-slate-700 text-slate-100">
                 <SelectItem value="otro">Ingreso manual...</SelectItem>
@@ -507,14 +517,6 @@ export function FormularioReserva({
                   value={datosFormulario.organizador}
                   onChange={(e) => establecerDatosFormulario({ ...datosFormulario, organizador: e.target.value })}
                   placeholder="Nombre completo"
-                  className={`${fieldClass} text-base h-12`}
-                  required
-                />
-                <Input
-                  type="email"
-                  value={datosFormulario.organizador_email}
-                  onChange={(e) => establecerDatosFormulario({ ...datosFormulario, organizador_email: e.target.value })}
-                  placeholder="Correo institucional"
                   className={`${fieldClass} text-base h-12`}
                   required
                 />

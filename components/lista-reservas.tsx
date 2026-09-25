@@ -10,6 +10,9 @@ import {
   User,
   Users,
   Filter,
+  Download,
+  CheckCircle2,
+  Circle,
 } from "lucide-react";
 import type { Reserva, AsistenteRegistrado } from "@/app/page";
 import { BuscadorEventos, type FiltrosBusqueda } from "@/components/buscador-eventos";
@@ -42,6 +45,11 @@ type PropiedadesListaReservas = {
     reservaId: string,
     asistenteId: string,
   ) => Promise<boolean>;
+  alActualizarAsistencia: (
+    reservaId: string,
+    registroId: string,
+    asistio: boolean,
+  ) => Promise<boolean>;
   usuarioActualId?: string;
   modoUsuario?: "organizador" | "asistente" | null;
   asistentesRegistrados?: AsistenteRegistrado[];
@@ -52,6 +60,7 @@ export function ListaReservas({
   reservas,
   alEliminar,
   alEliminarAsistente,
+  alActualizarAsistencia,
   usuarioActualId,
   asistentesRegistrados,
   modoUsuario,
@@ -67,6 +76,46 @@ export function ListaReservas({
   const [isDeleting, setIsDeleting] = useState(false);
   const [reservaParaEliminar, setReservaParaEliminar] = useState<Reserva | null>(null);
   const [filtrosCompartidos, setFiltrosCompartidos] = useState<FiltrosBusqueda | null>(null);
+  const [actualizandoAsistencia, setActualizandoAsistencia] = useState<Record<string, boolean>>({});
+
+  const descargarReporte = (reserva: Reserva, asistentes: AsistenteRegistrado[]) => {
+    const formatearFechaRegistro = (fechaRegistro: string) => {
+      const fecha = new Date(fechaRegistro);
+      if (Number.isNaN(fecha.getTime())) return fechaRegistro;
+
+      const fechaGmtMenos6 = new Date(fecha.getTime() - 6 * 60 * 60 * 1000);
+      const dosDigitos = (valor: number) => String(valor).padStart(2, "0");
+      return `${dosDigitos(fechaGmtMenos6.getUTCDate())}/${dosDigitos(
+        fechaGmtMenos6.getUTCMonth() + 1
+      )}/${fechaGmtMenos6.getUTCFullYear()} ${dosDigitos(
+        fechaGmtMenos6.getUTCHours()
+      )}:${dosDigitos(fechaGmtMenos6.getUTCMinutes())}`;
+    };
+    const escapar = (valor: string | number) => {
+      const texto = String(valor);
+      const seguro = /^[=+\-@]/.test(texto) ? `'${texto}` : texto;
+      return `"${seguro.replace(/"/g, '""')}"`;
+    };
+    const filas = [
+      ["Conferencia", "Asistente", "Correo", "Asiento", "Fecha de registro", "Asistió"],
+      ...asistentes.map((asistente) => [
+        reserva.titulo,
+        asistente.nombre,
+        asistente.email,
+        asistente.numeroAsiento,
+        formatearFechaRegistro(asistente.fechaRegistro),
+        asistente.asistio ? "Sí" : "No",
+      ]),
+    ];
+    const contenido = filas.map((fila) => fila.map(escapar).join(",")).join("\r\n");
+    const archivo = new Blob([`\uFEFF${contenido}`], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(archivo);
+    const enlace = document.createElement("a");
+    enlace.href = url;
+    enlace.download = `reporte-${reserva.titulo.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}-${reserva.fecha}.csv`;
+    enlace.click();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
 
   const formatearFecha = (textoFecha?: string | null) => {
     if (!textoFecha || typeof textoFecha !== "string") return "Fecha inválida";
@@ -179,6 +228,7 @@ export function ListaReservas({
             const asistentes = (asistentesRegistrados || []).filter(a => String(a.reservaId) === String(reserva.id));
             const capacidadMaxima = reserva.asistentes || 168;
             const restantes = Math.max(0, capacidadMaxima - asistentes.length);
+            const totalAsistieron = asistentes.filter((asistente) => asistente.asistio).length;
 
             return (
               <Card
@@ -244,6 +294,20 @@ export function ListaReservas({
                   {/* Detalle de Asistentes expandible */}
                   {esOrganizador && (
                     <div className="mt-4 pt-4 border-t border-slate-800/50">
+                      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                        <p className="text-xs text-slate-300">
+                          Asistencia confirmada: <span className="font-semibold text-emerald-300">{totalAsistieron}</span> de {asistentes.length}
+                        </p>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => descargarReporte(reserva, asistentes)}
+                          className="border-slate-700 bg-slate-900 text-slate-200 hover:bg-slate-800"
+                        >
+                          <Download className="mr-2 h-4 w-4" />
+                          Descargar reporte CSV
+                        </Button>
+                      </div>
                       <details className="group/details">
                         <summary className="list-none cursor-pointer flex items-center justify-between text-xs text-slate-400 hover:text-slate-200">
                           <span className="flex items-center gap-2">
@@ -258,15 +322,43 @@ export function ListaReservas({
                               <div className="min-w-0">
                                 <p className="text-xs font-medium text-slate-200 truncate">{a.nombre}</p>
                                 <p className="text-[10px] text-muted truncate">{a.email}</p>
+                                <p className={`text-[10px] ${a.asistio ? "text-emerald-300" : "text-slate-500"}`}>
+                                  {a.asistio ? "Asistió" : "Pendiente de check-in"}
+                                </p>
                               </div>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => alEliminarAsistente(reserva.id, a.id)}
-                                className="h-7 w-7 p-0 hover:text-red-400"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </Button>
+                                <div className="ml-2 flex shrink-0 items-center gap-1">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    disabled={Boolean(actualizandoAsistencia[a.id])}
+                                    aria-label={a.asistio ? `Quitar asistencia de ${a.nombre}` : `Marcar asistencia de ${a.nombre}`}
+                                    title={a.asistio ? "Quitar asistencia" : "Marcar asistencia"}
+                                    onClick={async () => {
+                                      setActualizandoAsistencia((previous) => ({ ...previous, [a.id]: true }));
+                                      const actualizado = await alActualizarAsistencia(reserva.id, a.id, !a.asistio);
+                                      if (!actualizado) {
+                                        toast({
+                                          title: "No se pudo actualizar",
+                                          description: "Inténtalo de nuevo. La asistencia no se modificó.",
+                                          variant: "destructive",
+                                        });
+                                      }
+                                      setActualizandoAsistencia((previous) => ({ ...previous, [a.id]: false }));
+                                    }}
+                                    className="h-8 px-2 text-emerald-300 hover:bg-emerald-500/10 hover:text-emerald-200"
+                                  >
+                                    {a.asistio ? <CheckCircle2 className="h-4 w-4" /> : <Circle className="h-4 w-4" />}
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => alEliminarAsistente(reserva.id, a.id)}
+                                    aria-label={`Eliminar registro de ${a.nombre}`}
+                                    className="h-7 w-7 p-0 hover:text-red-400"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </Button>
+                                </div>
                             </div>
                           ))}
                         </div>

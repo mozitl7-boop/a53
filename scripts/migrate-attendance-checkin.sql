@@ -1,0 +1,5 @@
+ALTER TABLE registros_asistentes
+  ADD COLUMN IF NOT EXISTS asistio BOOLEAN NOT NULL DEFAULT FALSE;
+
+ALTER TABLE eventos
+  ADD COLUMN IF NOT EXISTS ponente_nombre TEXT;

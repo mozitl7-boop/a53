@@ -55,6 +55,7 @@ export type AsistenteRegistrado = {
   email: string;
   numeroAsiento: number;
   fechaRegistro: string;
+  asistio?: boolean;
 };
 
 export default function Page() {
@@ -245,6 +246,7 @@ export default function Page() {
                   row.fecha_registro ||
                   row.fechaRegistro ||
                   new Date().toISOString(),
+                asistio: Boolean(row.asistio),
               }));
               setAsistentesRegistrados(regs);
             }
@@ -294,6 +296,7 @@ export default function Page() {
           email,
           numeroAsiento,
           fechaRegistro,
+          asistio: Boolean(row.asistio),
         };
 
         setAsistentesRegistrados((prev) => {
@@ -493,6 +496,7 @@ export default function Page() {
                       row.fecha_registro ||
                       row.fechaRegistro ||
                       new Date().toISOString(),
+                    asistio: Boolean(row.asistio),
                   }));
                   setAsistentesRegistrados((prev) => {
                     const ids = new Set(prev.map((p) => p.id));
@@ -618,6 +622,7 @@ export default function Page() {
               row.fecha_registro ||
               row.fechaRegistro ||
               new Date().toISOString(),
+            asistio: Boolean(row.asistio),
           }));
           setAsistentesRegistrados((prev) => {
             // mantener intactos los registros de otras reservas, sustituir los de esta reserva
@@ -677,6 +682,7 @@ export default function Page() {
             email: row.email || email,
             numeroAsiento: row.numeroAsiento || row.numero_orden || 0,
             fechaRegistro: row.fecha_registro || new Date().toISOString(),
+            asistio: Boolean(row.asistio),
           };
 
           setAsistentesRegistrados((prev) => {
@@ -697,6 +703,33 @@ export default function Page() {
     },
     [reservas, asistentesRegistrados, userIds]
   );
+
+  const actualizarAsistencia = async (
+    reservaId: string,
+    registroId: string,
+    asistio: boolean
+  ) => {
+    try {
+      const response = await fetch(`/api/registros-asistentes/${reservaId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ registroId, asistio }),
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "No se pudo actualizar la asistencia");
+      }
+      setAsistentesRegistrados((previous) =>
+        previous.map((registro) =>
+          registro.id === registroId ? { ...registro, asistio } : registro
+        )
+      );
+      return true;
+    } catch (error) {
+      console.error("Error actualizando asistencia:", error);
+      return false;
+    }
+  };
 
   if (modoUsuario === null) {
     return (
@@ -724,7 +757,7 @@ export default function Page() {
             <div className="mb-6 space-y-2">
               <h2 className="text-2xl font-bold text-white sm:text-3xl">Iniciar Sesión</h2>
               <p className="text-sm leading-6 text-slate-400 sm:text-base">
-                Ingresa tu correo institucional para recibir tu enlace de acceso.
+                Ingresa tu correo para recibir tu enlace de acceso.
               </p>
             </div>
             <LoginUsuario
@@ -801,6 +834,7 @@ export default function Page() {
                         reservas={reservas}
                         alEliminar={eliminarReserva}
                         alEliminarAsistente={eliminarAsistente}
+                        alActualizarAsistencia={actualizarAsistencia}
                         asistentesRegistrados={asistentesRegistrados}
                         usuarioActualId={currentUserId || undefined}
                         modoUsuario={modoUsuario}

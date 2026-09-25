@@ -763,3 +763,48 @@ export async function DELETE(
     );
   }
 }
+
+export async function PATCH(
+  request: Request,
+  { params }: { params: Promise<{ eventoId: string }> }
+) {
+  try {
+    const { eventoId } = await params;
+    const sessionUser = getUserFromRequest(request);
+    if (!sessionUser || (sessionUser.tipo_usuario !== "organizador" && sessionUser.tipo_usuario !== "admin")) {
+      return NextResponse.json({ success: false, error: "Solo organizadores pueden actualizar la asistencia" }, { status: 403 });
+    }
+
+    const body = await request.json();
+    const { registroId, asistio } = body;
+    if (!registroId || typeof asistio !== "boolean") {
+      return NextResponse.json({ success: false, error: "registroId y asistio son requeridos" }, { status: 400 });
+    }
+
+    let updated: { id: string; asistio: boolean } | null = null;
+    let lastError: any = null;
+    for (const eventColumn of ["id_evento", "evento_id"]) {
+      const { data, error } = await supabase
+        .from("registros_asistentes")
+        .update({ asistio })
+        .eq("id", registroId)
+        .eq(eventColumn, eventoId)
+        .select("id,asistio")
+        .maybeSingle();
+      if (!error && data) {
+        updated = data;
+        break;
+      }
+      lastError = error;
+    }
+
+    if (lastError && !updated) throw lastError;
+    if (!updated) {
+      return NextResponse.json({ success: false, error: "Registro no encontrado para este evento" }, { status: 404 });
+    }
+    return NextResponse.json({ success: true, registro: updated });
+  } catch (error: any) {
+    console.error("Error actualizando asistencia:", error);
+    return NextResponse.json({ success: false, error: error.message || "Error al actualizar asistencia" }, { status: 500 });
+  }
+}

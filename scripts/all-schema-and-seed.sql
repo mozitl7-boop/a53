@@ -45,22 +45,30 @@ CREATE TABLE IF NOT EXISTS eventos (
   estado VARCHAR(20) DEFAULT 'confirmado' CHECK (estado IN ('confirmado', 'cancelado', 'pendiente')),
   tipo_evento VARCHAR(50),
   carrera VARCHAR(50),
+  ponente_nombre TEXT,
   requiere_equipo BOOLEAN DEFAULT FALSE,
   notas_adicionales TEXT,
   fecha_creacion TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   fecha_actualizacion TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+ALTER TABLE eventos
+  ADD COLUMN IF NOT EXISTS ponente_nombre TEXT;
+
 CREATE TABLE IF NOT EXISTS registros_asistentes (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   id_evento UUID NOT NULL REFERENCES eventos(id) ON DELETE CASCADE,
   id_asistente UUID NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
   estado VARCHAR(20) DEFAULT 'confirmado' CHECK (estado IN ('confirmado', 'pendiente', 'cancelado')),
+  asistio BOOLEAN NOT NULL DEFAULT FALSE,
   fecha_registro TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   id_asiento UUID REFERENCES asientos(id),
   numero_orden INTEGER,
   UNIQUE(id_evento, id_asistente)
 );
+
+ALTER TABLE registros_asistentes
+  ADD COLUMN IF NOT EXISTS asistio BOOLEAN NOT NULL DEFAULT FALSE;
 
 CREATE TABLE IF NOT EXISTS archivos_evento (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

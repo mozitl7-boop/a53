@@ -10,6 +10,7 @@ export type EntradaReserva = {
   auditorio: "A" | "B";
   fecha: string;
   horaInicio: string;
+  horaFin?: string;
   asistentes: number;
   titulo: string;
 };
@@ -24,7 +25,7 @@ const CAPACIDAD_AUDITORIO = {
   B: 168,
 };
 
-const DURACION_RESERVA = 1;
+const DURACION_RESERVA_MINUTOS = 60;
 
 function formatearFechaLocal(fecha: Date): string {
   const year = fecha.getFullYear();
@@ -52,13 +53,15 @@ export class MiddlewareValidacionReservas {
   }
 
   validar(entrada: EntradaReserva): ResultadoValidacion {
+    const formatoHora = this.validarFormatoHora(entrada);
+    if (!formatoHora.esValido) return formatoHora;
+
     const validaciones = [
       this.validarHorariosNegocio(entrada),
       this.validarFechaFutura(entrada),
       this.validarRestriccionHorarioDia(entrada),
       this.validarDisponibilidadHorario(entrada),
       this.validarCapacidad(entrada),
-      this.validarFormatoHora(entrada),
     ];
 
     const error = validaciones.find((v) => !v.esValido);
@@ -77,9 +80,8 @@ export class MiddlewareValidacionReservas {
   }
 
   private validarHorariosNegocio(entrada: EntradaReserva): ResultadoValidacion {
-    const [hora, minuto] = entrada.horaInicio.split(":").map(Number);
-    const minutosInicio = hora * 60 + minuto;
-    const minutosFin = minutosInicio + DURACION_RESERVA * 60;
+    const minutosInicio = this.horaAMinutos(entrada.horaInicio);
+    const minutosFin = this.obtenerMinutosFin(entrada);
 
     const minutosApertura = HORARIOS_NEGOCIO.inicio * 60;
     const minutosCierre = HORARIOS_NEGOCIO.fin * 60;
@@ -89,6 +91,10 @@ export class MiddlewareValidacionReservas {
         esValido: false,
         error: `El horario de inicio debe ser después de las ${HORARIOS_NEGOCIO.inicio}:00 AM`,
       };
+    }
+
+    if (minutosFin <= minutosInicio) {
+      return { esValido: false, error: "La hora de fin debe ser posterior a la hora de inicio" };
     }
 
     if (minutosFin > minutosCierre) {
@@ -160,7 +166,7 @@ export class MiddlewareValidacionReservas {
     const fechaEntradaNormalizada = normalizarFecha(entrada.fecha);
 
     const minutosInicioEntrada = this.horaAMinutos(entrada.horaInicio);
-    const minutosFinEntrada = minutosInicioEntrada + DURACION_RESERVA * 60;
+    const minutosFinEntrada = this.obtenerMinutosFin(entrada);
 
     const conflictos = this.reservas.filter((reserva) => {
       if (reserva.auditorio !== entrada.auditorio) return false;
@@ -214,17 +220,23 @@ export class MiddlewareValidacionReservas {
   private validarFormatoHora(entrada: EntradaReserva): ResultadoValidacion {
     const regexHora = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
 
-    if (!regexHora.test(entrada.horaInicio)) {
+    if (!regexHora.test(entrada.horaInicio) || (entrada.horaFin && !regexHora.test(entrada.horaFin))) {
       return {
         esValido: false,
-        error: "Formato de hora inválido. Use HH:MM",
+        error: "Formato de hora inválido. Usa HH:MM para inicio y fin",
       };
     }
 
     return { esValido: true };
   }
 
-  obtenerHorariosDisponibles(auditorio: "A" | "B", fecha: string): string[] {
+  obtenerHorariosDisponibles(
+    auditorio: "A" | "B",
+    fecha: string,
+    duracionMinutos = DURACION_RESERVA_MINUTOS
+  ): string[] {
+    if (!Number.isFinite(duracionMinutos) || duracionMinutos <= 0) return [];
+
     const disponibles: string[] = [];
     const fechaNormalizada = normalizarFecha(fecha);
 
@@ -245,7 +257,7 @@ export class MiddlewareValidacionReservas {
       const ranuraHoraria = `${hora.toString().padStart(2, "0")}:00`;
 
       const minutosInicio = hora * 60;
-      const minutosFin = minutosInicio + DURACION_RESERVA * 60;
+      const minutosFin = minutosInicio + duracionMinutos;
 
       const estaDisponible = !this.reservas.some((reserva) => {
         if (reserva.auditorio !== auditorio) return false;
@@ -272,13 +284,39 @@ export class MiddlewareValidacionReservas {
   estaHorarioDisponible(
     auditorio: "A" | "B",
     fecha: string,
-    horaInicio: string
+    horaInicio: string,
+    horaFin?: string
   ): boolean {
-    const horariosDisponibles = this.obtenerHorariosDisponibles(
-      auditorio,
-      fecha
-    );
-    return horariosDisponibles.includes(horaInicio);
+    const minutosInicio = this.horaAMinutos(horaInicio);
+    const minutosFin = horaFin
+      ? this.horaAMinutos(horaFin)
+      : minutosInicio + DURACION_RESERVA_MINUTOS;
+    if (
+      minutosInicio < HORARIOS_NEGOCIO.inicio * 60 ||
+      minutosFin <= minutosInicio ||
+      minutosFin > HORARIOS_NEGOCIO.fin * 60
+    ) return false;
+
+    const fechaNormalizada = normalizarFecha(fecha);
+    const ahora = new Date();
+    if (fechaNormalizada === formatearFechaLocal(ahora) && ahora.getHours() >= 16) return false;
+
+    const fechaInicio = new Date(`${fechaNormalizada}T${horaInicio}:00`);
+    if (fechaInicio < ahora) return false;
+
+    return !this.reservas.some((reserva) => {
+      if (reserva.auditorio !== auditorio) return false;
+      if (normalizarFecha(reserva.fecha) !== fechaNormalizada) return false;
+      const inicioExistente = this.horaAMinutos(reserva.horaInicio);
+      const finExistente = this.horaAMinutos(reserva.horaFin);
+      return minutosInicio < finExistente && inicioExistente < minutosFin;
+    });
+  }
+
+  private obtenerMinutosFin(entrada: EntradaReserva): number {
+    return entrada.horaFin
+      ? this.horaAMinutos(entrada.horaFin)
+      : this.horaAMinutos(entrada.horaInicio) + DURACION_RESERVA_MINUTOS;
   }
 
   obtenerEstadisticasUso(auditorio?: "A" | "B") {

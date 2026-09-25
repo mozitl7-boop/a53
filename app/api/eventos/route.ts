@@ -132,7 +132,7 @@ export async function GET() {
         estado: e.estado,
         tipo_evento: e.tipo_evento || null,
         carrera: e.carrera || null,
-        organizador_nombre: usuario.nombre || null,
+        organizador_nombre: e.ponente_nombre || usuario.nombre || null,
         organizador_email: usuario.email || null,
         capacidad_total,
         asistentes_registrados: Number(asistentes_registrados),
@@ -168,9 +168,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     // Aceptar variantes snake_case o camelCase
     const auditorio_id = body.auditorio_id ?? body.id_auditorio ?? null;
-    let organizador_id = body.organizador_id ?? body.id_organizador ?? null;
-    const organizador_nombre = body.organizador_nombre ?? body.organizadorNombre ?? null;
-    const organizador_email = body.organizador_email ?? body.organizadorEmail ?? null;
+    const ponente_nombre = body.ponente_nombre ?? body.organizador_nombre ?? body.organizadorNombre ?? null;
     const titulo = body.titulo ?? null;
     const descripcion = body.descripcion ?? "";
     const fecha = body.fecha ?? null;
@@ -196,67 +194,50 @@ export async function POST(request: Request) {
     if (audErr) throw audErr;
     if (!audCheck) return NextResponse.json({ success: false, error: 'Auditorio no encontrado' }, { status: 404 });
 
-    // Resolver o crear organizador
+    // La sesión conserva la propiedad de la reserva; el nombre visible del ponente es independiente.
     const sessionUser = getUserFromRequest(request);
-    let finalOrganizadorId = organizador_id;
-    if (!finalOrganizadorId) {
-      if (sessionUser && sessionUser.tipo_usuario === 'organizador') {
-        finalOrganizadorId = String(sessionUser.id);
-      }
+    if (!sessionUser) {
+      return NextResponse.json({ success: false, error: 'Autenticación requerida para crear eventos' }, { status: 401 });
+    }
+    if (sessionUser.tipo_usuario !== 'organizador' && sessionUser.tipo_usuario !== 'admin') {
+      return NextResponse.json({ success: false, error: 'No autorizado: solo organizadores o administradores pueden crear eventos' }, { status: 403 });
     }
 
-    if (!finalOrganizadorId) {
-      if (!organizador_nombre || String(organizador_nombre).trim() === '') {
-        return NextResponse.json({ success: false, error: 'organizador_id o organizador_nombre requerido' }, { status: 400 });
-      }
-      if (!organizador_email || String(organizador_email).trim() === '') {
-        return NextResponse.json({ success: false, error: 'organizador_email es requerido cuando se crea un organizador nuevo' }, { status: 400 });
-      }
+    const finalOrganizadorId = String(sessionUser.id);
 
-      // Buscar por email primero
-      const { data: byEmail } = await supabase.from('usuarios').select('id, tipo_usuario').eq('email', organizador_email).limit(1);
-      if (byEmail && byEmail.length > 0) {
-        // Usuario existe - verificar que sea organizador
-        if (byEmail[0].tipo_usuario !== 'organizador') {
-          return NextResponse.json({ 
-            success: false, 
-            error: 'El usuario existe pero no es organizador. Debe registrarse primero con un código de invitación.' 
-          }, { status: 403 });
-        }
-        finalOrganizadorId = byEmail[0].id;
-      } else {
-        // Usuario NO existe - no permitir crear como organizador (debe usar invitación)
-        return NextResponse.json({ 
-          success: false, 
-          error: 'El organizador no existe. Los nuevos organizadores deben registrarse primero con un código de invitación válido.' 
-        }, { status: 403 });
-      }
-    } else {
-      // validar que el id exista y sea organizador
-      const { data: orgCheck } = await supabase.from('usuarios').select('tipo_usuario').eq('id', String(finalOrganizadorId)).limit(1);
-      if (!orgCheck || orgCheck.length === 0) return NextResponse.json({ success: false, error: 'Organizador no encontrado' }, { status: 404 });
-      if (orgCheck[0].tipo_usuario !== 'organizador') return NextResponse.json({ success: false, error: 'El usuario no es un organizador' }, { status: 400 });
+    if (!ponente_nombre || !String(ponente_nombre).trim()) {
+      return NextResponse.json({ success: false, error: 'El nombre del ponente es requerido' }, { status: 400 });
     }
 
-    // Verificar permisos: admin o el mismo organizador
-    if (sessionUser) {
-      const sessId = String(sessionUser.id);
-      const sessTipo = sessionUser.tipo_usuario || null;
-      const isAdmin = sessTipo === 'admin';
-      const isOrganizerUser = finalOrganizadorId && String(finalOrganizadorId) === sessId;
-      if (!isAdmin && !isOrganizerUser) return NextResponse.json({ success: false, error: 'No autorizado: debe ser organizador o admin' }, { status: 403 });
-    } else {
-      // sin sesión requiere organizador explícito (ya resuelto arriba)
-      if (!finalOrganizadorId) return NextResponse.json({ success: false, error: 'Autenticación requerida para crear eventos' }, { status: 401 });
+    const minutos = (valor: string) => {
+      const [hora, minuto] = String(valor).slice(0, 5).split(':').map(Number);
+      return hora * 60 + minuto;
+    };
+    const formatoHora = /^([01]\d|2[0-3]):[0-5]\d$/;
+    if (!formatoHora.test(String(hora_inicio)) || !formatoHora.test(String(hora_fin))) {
+      return NextResponse.json({ success: false, error: 'Las horas deben tener formato HH:MM' }, { status: 400 });
+    }
+    if (minutos(hora_inicio) < 7 * 60 || minutos(hora_fin) <= minutos(hora_inicio) || minutos(hora_fin) > 17 * 60) {
+      return NextResponse.json({ success: false, error: 'El horario debe iniciar desde las 07:00, terminar después del inicio y antes de las 17:00' }, { status: 400 });
     }
 
-    // Comprobar colisión
-    const { data: existe } = await supabase.from('eventos').select('id').eq(auditorioColumn, String(auditorio_id)).eq('fecha', fecha).eq('hora_inicio', hora_inicio).limit(1);
-    if (existe && existe.length > 0) {
-      // devolver conflicto
-      const { data: conflict } = await supabase.from('eventos').select(`*, usuarios:usuarios!inner(${organizadorColumn}=id)`)
-        .eq('id', existe[0].id).limit(1);
-      return NextResponse.json({ success: false, error: 'Ya existe un evento en ese auditorio/fecha/hora', conflict: conflict && conflict[0] ? conflict[0] : null }, { status: 409 });
+    const { data: eventosDelDia, error: eventosDelDiaError } = await supabase
+      .from('eventos')
+      .select('id,titulo,hora_inicio,hora_fin')
+      .eq(auditorioColumn, String(auditorio_id))
+      .eq('fecha', fecha)
+      .neq('estado', 'cancelado');
+    if (eventosDelDiaError) throw eventosDelDiaError;
+    const conflicto = (eventosDelDia || []).find((evento: any) =>
+      minutos(hora_inicio) < minutos(evento.hora_fin) &&
+      minutos(evento.hora_inicio) < minutos(hora_fin)
+    );
+    if (conflicto) {
+      return NextResponse.json({
+        success: false,
+        error: `El Auditorio ${auditorio_id} ya está reservado de ${String(conflicto.hora_inicio).slice(0, 5)} a ${String(conflicto.hora_fin).slice(0, 5)} para "${conflicto.titulo}"`,
+        conflict: conflicto,
+      }, { status: 409 });
     }
 
     // Insertar evento usando columnas detectadas
@@ -270,6 +251,7 @@ export async function POST(request: Request) {
       estado: 'confirmado',
       tipo_evento: tipo_evento || null,
       carrera: carrera || null,
+      ponente_nombre: ponente_nombre ? String(ponente_nombre).trim() : null,
     };
     insertObj[auditorioColumn] = String(auditorio_id);
     insertObj[organizadorColumn] = finalOrganizadorId;
@@ -304,7 +286,7 @@ export async function POST(request: Request) {
       horaInicio: (inserted.hora_inicio || '').toString().substring(0,5),
       horaFin: (inserted.hora_fin || '').toString().substring(0,5),
       titulo: inserted.titulo,
-      organizador: null,
+      organizador: inserted.ponente_nombre || null,
       organizador_email: null,
       organizadorId: inserted[organizadorColumn],
       descripcion: inserted.descripcion || '',
@@ -319,7 +301,7 @@ export async function POST(request: Request) {
     // Intentar obtener datos del organizador para incluir nombre/email
     const { data: orgData } = await supabase.from('usuarios').select('id,nombre,email').eq('id', mapped.organizadorId).limit(1);
     if (orgData && orgData.length > 0) {
-      mapped.organizador = orgData[0].nombre || null;
+      mapped.organizador = inserted.ponente_nombre || orgData[0].nombre || null;
       mapped.organizador_email = orgData[0].email || null;
     }
 

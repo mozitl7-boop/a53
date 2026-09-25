@@ -16,7 +16,11 @@ export function Calendario({
   fechaSeleccionada,
   alCambiarFecha,
 }: PropiedadesVistaCalendario) {
-  const horas = Array.from({ length: 10 }, (_, i) => i + 7); // 7 AM a 4 PM
+  const horaApertura = 7;
+  const horaCierre = 17;
+  const pixelesPorMinuto = 1.6;
+  const separacionEventos = 6;
+  const altoLineaTiempo = (horaCierre - horaApertura) * 60 * pixelesPorMinuto;
 
   const formatearFechaLocal = (fecha: Date) => {
     const year = fecha.getFullYear();
@@ -54,17 +58,25 @@ export function Calendario({
     }
   };
 
-  const obtenerReservasParaRanura = (auditorio: "A" | "B", hora: number) => {
+  const obtenerReservasParaAuditorio = (auditorio: "A" | "B") => {
     return reservas.filter((reserva) => {
       if (reserva.auditorio !== auditorio) return false;
 
       const fechaReserva = reserva.fecha;
       const fechaSelec = formatearFechaLocal(fechaSeleccionada);
-      if (fechaReserva !== fechaSelec) return false;
-
-      const [horaInicio] = reserva.horaInicio.split(":").map(Number);
-      return horaInicio === hora;
+      return fechaReserva === fechaSelec;
     });
+  };
+
+  const obtenerPosicionReserva = (hora: string) => {
+    const [horas, minutos] = hora.split(":").map(Number);
+    return (horas * 60 + minutos - horaApertura * 60) * pixelesPorMinuto;
+  };
+
+  const obtenerDuracionReserva = (reserva: Reserva) => {
+    const inicio = reserva.horaInicio.split(":").map(Number);
+    const fin = reserva.horaFin.split(":").map(Number);
+    return Math.max(0, fin[0] * 60 + fin[1] - (inicio[0] * 60 + inicio[1]));
   };
 
   const formatearFecha = (fecha: Date) => {
@@ -122,81 +134,69 @@ export function Calendario({
             </div>
           </div>
 
-          <div className="space-y-2.5">
-            {horas.map((hora) => {
-              const reservasA = obtenerReservasParaRanura("A", hora);
-              const reservasB = obtenerReservasParaRanura("B", hora);
+          <div className="grid grid-cols-[52px_minmax(0,1fr)_minmax(0,1fr)] gap-1.5 sm:grid-cols-[100px_1fr_1fr] sm:gap-3">
+            <div className="relative text-xs font-medium text-slate-500 sm:text-sm" style={{ height: altoLineaTiempo }}>
+              {Array.from({ length: horaCierre - horaApertura + 1 }, (_, indice) => {
+                const hora = horaApertura + indice;
+                return (
+                  <span
+                    key={hora}
+                    className="absolute left-0 -translate-y-1/2"
+                    style={{ top: indice * 60 * pixelesPorMinuto }}
+                  >
+                    {String(hora).padStart(2, "0")}:00
+                  </span>
+                );
+              })}
+            </div>
 
+            {(["A", "B"] as const).map((auditorio) => {
+              const reservasAuditorio = obtenerReservasParaAuditorio(auditorio);
+              const color = auditorio === "A" ? "#f97316" : "#8b5cf6";
               return (
                 <div
-                  key={hora}
-                  className="grid grid-cols-[52px_minmax(0,1fr)_minmax(0,1fr)] gap-1.5 sm:grid-cols-[100px_1fr_1fr] sm:gap-3"
+                  key={auditorio}
+                  className="relative min-w-0 overflow-hidden rounded-lg border border-slate-800 bg-slate-900/50"
+                  style={{ height: altoLineaTiempo }}
                 >
-                  <div className="flex items-center py-6 text-xs font-medium text-slate-500 sm:text-sm">
-                    {hora.toString().padStart(2, "0")}:00
-                  </div>
-
-                  <div
-                    className={`min-h-20 min-w-0 rounded-lg border p-1.5 transition-all sm:p-2 ${
-                      reservasA.length > 0
-                        ? "border-[#f97316]/50 bg-[#f97316]/10"
-                        : "border-slate-800/80 bg-slate-900/50 text-slate-400 hover:border-slate-700 hover:text-white"
-                    }`}
-                  >
-                    {reservasA.length > 0 ? (
-                      reservasA.map((reserva) => (
-                        <div
-                          key={reserva.id}
-                          className="h-full min-w-0 rounded-lg bg-[#f97316] p-2 text-white shadow-md sm:p-3"
-                        >
-                          <p className="truncate text-xs font-semibold sm:text-sm">
-                            {reserva.titulo}
-                          </p>
-                          <p className="mt-1 truncate text-[10px] text-white/90 sm:text-xs">
+                  {Array.from({ length: horaCierre - horaApertura + 1 }, (_, indice) => (
+                    <div
+                      key={indice}
+                      className="pointer-events-none absolute inset-x-0 border-t border-slate-700/60"
+                      style={{ top: indice * 60 * pixelesPorMinuto }}
+                    />
+                  ))}
+                  {reservasAuditorio.map((reserva) => {
+                    const duracion = obtenerDuracionReserva(reserva);
+                    const alto = duracion * pixelesPorMinuto;
+                    const compacto = alto < 42;
+                    return (
+                      <div
+                        key={reserva.id}
+                        title={`${reserva.titulo} | ${reserva.organizador} | ${reserva.horaInicio} - ${reserva.horaFin}`}
+                        className="absolute inset-x-1 z-10 min-w-0 overflow-hidden rounded-lg px-1.5 py-1 text-white shadow-sm sm:inset-x-2 sm:px-2"
+                        style={{
+                          top: obtenerPosicionReserva(reserva.horaInicio) + separacionEventos / 2,
+                          height: Math.max(alto - separacionEventos, 1),
+                          backgroundColor: color,
+                        }}
+                      >
+                        <p className={`truncate font-semibold ${compacto ? "text-[10px] leading-3" : "text-[11px] leading-4 sm:text-sm"}`}>
+                          {reserva.titulo}
+                        </p>
+                        {!compacto && alto >= 68 && (
+                          <p className="truncate text-[10px] leading-3 text-white/90 sm:text-xs">
                             {reserva.organizador}
                           </p>
-                          <p className="mt-1 truncate text-[10px] text-white/80 sm:text-xs">
+                        )}
+                        {!compacto && (
+                          <p className="truncate text-[9px] leading-3 text-white/80 sm:text-[10px]">
                             {reserva.horaInicio} - {reserva.horaFin}
                           </p>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="flex h-full items-center justify-center text-xs font-medium text-slate-400">
-                        Libre
+                        )}
                       </div>
-                    )}
-                  </div>
-
-                  <div
-                    className={`min-h-20 min-w-0 rounded-lg border p-1.5 transition-all sm:p-2 ${
-                      reservasB.length > 0
-                        ? "border-[#8b5cf6]/50 bg-[#8b5cf6]/10"
-                        : "border-slate-800/80 bg-slate-900/50 text-slate-400 hover:border-slate-700 hover:text-white"
-                    }`}
-                  >
-                    {reservasB.length > 0 ? (
-                      reservasB.map((reserva) => (
-                        <div
-                          key={reserva.id}
-                          className="h-full min-w-0 rounded-lg bg-[#8b5cf6] p-2 text-white shadow-md sm:p-3"
-                        >
-                          <p className="truncate text-xs font-semibold sm:text-sm">
-                            {reserva.titulo}
-                          </p>
-                          <p className="mt-1 truncate text-[10px] text-white/90 sm:text-xs">
-                            {reserva.organizador}
-                          </p>
-                          <p className="mt-1 truncate text-[10px] text-white/80 sm:text-xs">
-                            {reserva.horaInicio} - {reserva.horaFin}
-                          </p>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="flex h-full items-center justify-center text-xs font-medium text-slate-400">
-                        Libre
-                      </div>
-                    )}
-                  </div>
+                    );
+                  })}
                 </div>
               );
             })}

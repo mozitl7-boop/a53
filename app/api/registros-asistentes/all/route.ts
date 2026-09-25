@@ -79,6 +79,7 @@ export async function GET() {
         fecha_registro: r.fecha_registro ?? null,
         fechaRegistro: r.fecha_registro ?? null,
         estado: r.estado ?? null,
+        asistio: Boolean(r.asistio),
       };
     });
 

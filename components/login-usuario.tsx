@@ -65,7 +65,7 @@ export function LoginUsuario({
         return;
       }
       setLinkSent(true);
-      setSuccess("Se ha enviado un enlace de confirmación a tu correo. Revisa tu bandeja de entrada.");
+      setSuccess("Abre el enlace que te enviamos para iniciar sesión. Si no lo encuentras, revisa spam o correo no deseado.");
       setEmail("");
     } catch (e: any) {
       setError(e.message || String(e));
@@ -95,7 +95,7 @@ export function LoginUsuario({
         return;
       }
       setLinkSent(true);
-      setSuccess("Se ha enviado un enlace de confirmación a tu correo. Completa el registro usando el enlace.");
+      setSuccess("Abre el enlace que te enviamos para completar el registro. Si no lo encuentras, revisa spam o correo no deseado.");
       setNombre("");
       setEmail("");
     } catch (e: any) {
@@ -140,7 +140,7 @@ export function LoginUsuario({
             <div className="flex flex-col gap-4 w-full">
               {linkSent ? (
                   <div className="w-full rounded-2xl border border-[#1e344f] bg-slate-900/80 p-5 text-slate-100 shadow-lg shadow-rose-950/20">
-                  <p className="text-sm">Enviado. Revisa tu correo para continuar.</p>
+                  <p className="text-sm">¡Enlace enviado! Revisa tu correo para iniciar sesión. Si no lo ves, busca también en spam o correo no deseado.</p>
                 </div>
               ) : (
                 <div className="flex flex-col gap-4 w-full">
@@ -173,7 +173,7 @@ export function LoginUsuario({
             <div className="flex flex-col gap-4 w-full">
               {linkSent ? (
                   <div className="w-full rounded-2xl border border-[#1e344f] bg-slate-900/80 p-5 text-slate-100 shadow-lg shadow-rose-950/20">
-                  <p className="text-sm">Enviado. Revisa tu correo para completar el registro.</p>
+                  <p className="text-sm">¡Enlace enviado! Revisa tu correo para completar el registro. Si no lo ves, busca también en spam o correo no deseado.</p>
                 </div>
               ) : (
                 <div className="flex flex-col gap-4 w-full">
