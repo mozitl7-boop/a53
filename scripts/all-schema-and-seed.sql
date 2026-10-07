@@ -70,6 +70,16 @@ CREATE TABLE IF NOT EXISTS registros_asistentes (
 ALTER TABLE registros_asistentes
   ADD COLUMN IF NOT EXISTS asistio BOOLEAN NOT NULL DEFAULT FALSE;
 
+CREATE TABLE IF NOT EXISTS asistencias_qr (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  evento_id UUID NOT NULL REFERENCES eventos(id) ON DELETE CASCADE,
+  nombre VARCHAR(120) NOT NULL,
+  matricula VARCHAR(40) NOT NULL,
+  asistio BOOLEAN NOT NULL DEFAULT TRUE,
+  fecha_registro TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  UNIQUE(evento_id, matricula)
+);
+
 CREATE TABLE IF NOT EXISTS archivos_evento (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   id_evento UUID NOT NULL REFERENCES eventos(id) ON DELETE CASCADE,
@@ -241,9 +251,9 @@ CREATE TABLE IF NOT EXISTS notificaciones_enviadas (
 -- ==========================
 
 INSERT INTO auditorios (id, nombre, capacidad_total, descripcion, equipamiento) VALUES
-('A', 'Auditorio A', 168, 'Auditorio principal', ARRAY['proyector','audio']),
-('B', 'Auditorio B', 168, 'Auditorio secundario', ARRAY['proyector','audio'])
-ON CONFLICT (id) DO NOTHING;
+('A', 'Sala 1', 168, 'Auditorio principal', ARRAY['proyector','audio']),
+('B', 'Sala 2', 168, 'Auditorio secundario', ARRAY['proyector','audio'])
+ON CONFLICT (id) DO UPDATE SET nombre = EXCLUDED.nombre;
 
 -- ==========================
 -- TABLA FINAL

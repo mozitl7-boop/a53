@@ -13,6 +13,7 @@ import {
   Home,
 } from "lucide-react";
 import Link from "next/link";
+import { obtenerNombreSala } from "@/lib/utils";
 
 type DetallesAsiento = {
   id: string;
@@ -203,7 +204,7 @@ export default function DetallesAsientoPage() {
                     AUDITORIO
                   </p>
                   <p className="text-base font-semibold text-gray-900">
-                    Auditorio {detalles.evento.auditorio}
+                    {obtenerNombreSala(detalles.evento.auditorio)}
                   </p>
                 </div>
                 <div className="bg-green-50 p-4 rounded-lg border border-green-200">

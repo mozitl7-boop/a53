@@ -8,6 +8,10 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     const email = (body?.email || "").toString().trim().toLowerCase();
+    const requestedReturnTo = (body?.returnTo || "").toString();
+    const returnTo = requestedReturnTo.startsWith("/") && !requestedReturnTo.startsWith("//") && !requestedReturnTo.includes("\\")
+      ? requestedReturnTo
+      : undefined;
     const ip = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown";
     if (!isAllowed(`rl:login:ip:${ip}`, 10, 60 * 1000)) {
       return NextResponse.json({ error: "Demasiadas solicitudes desde esta IP. Intenta en un minuto." }, { status: 429 });
@@ -46,7 +50,7 @@ export async function POST(req: Request) {
     // Enviar el enlace mágico por correo (se envía el token sin hash)
     const requestOrigin = req.headers.get("origin") ||
       `${req.headers.get("x-forwarded-proto") || "http"}://${req.headers.get("host") || "localhost:3000"}`;
-    const emailSent = await sendMagicLinkEmail(email, token, "login", requestOrigin);
+    const emailSent = await sendMagicLinkEmail(email, token, "login", requestOrigin, returnTo);
     if (!emailSent) {
       return NextResponse.json(
         { error: "No se pudo enviar el enlace de acceso. Verifica la configuración del correo." },

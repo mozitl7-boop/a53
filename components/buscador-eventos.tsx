@@ -13,13 +13,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import { obtenerNombreSala } from "@/lib/utils";
 import {
   Search,
   Filter,
   X,
   Calendar,
   Building2,
-  GraduationCap,
 } from "lucide-react";
 
 type FiltrosBusqueda = {
@@ -29,7 +29,6 @@ type FiltrosBusqueda = {
   fechaFin: string;
   estado: string;
   includeFull?: boolean;
-  carrera: string;
 };
 
 type PropiedadesBuscadorEventos = {
@@ -54,7 +53,6 @@ export function BuscadorEventos({
     fechaFin: "",
     estado: "todos",
     includeFull: false,
-    carrera: "todos",
   });
 
   useEffect(() => {
@@ -75,7 +73,6 @@ export function BuscadorEventos({
       fechaInicio: "",
       fechaFin: "",
       estado: "todos",
-      carrera: "todos",
     });
     alLimpiar();
   };
@@ -85,8 +82,7 @@ export function BuscadorEventos({
     filtros.auditorio !== "todos" ||
     filtros.fechaInicio ||
     filtros.fechaFin ||
-    filtros.estado !== "todos" ||
-    filtros.carrera !== "todos";
+    filtros.estado !== "todos";
 
   return (
     <Card className="w-full rounded-2xl border border-slate-800 bg-slate-950/95 p-3 shadow-xl backdrop-blur-sm md:p-4">
@@ -154,7 +150,7 @@ export function BuscadorEventos({
             <div>
               <Label className="flex items-center gap-2 mb-2">
                 <Building2 className="w-4 h-4" />
-                Auditorio
+                Sala
               </Label>
               <Select
                 value={filtros.auditorio}
@@ -163,51 +159,12 @@ export function BuscadorEventos({
                 }
               >
                 <SelectTrigger className="rounded-lg shadow-sm">
-                  <SelectValue placeholder="Selecciona un auditorio" />
+                  <SelectValue placeholder="Selecciona una sala" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="todos">Todos</SelectItem>
-                  <SelectItem value="A">Auditorio A</SelectItem>
-                  <SelectItem value="B">Auditorio B</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label className="flex items-center gap-2 mb-2">
-                <GraduationCap className="w-4 h-4" />
-                Carrera
-              </Label>
-              <Select
-                value={filtros.carrera}
-                onValueChange={(value) =>
-                  setFiltros({ ...filtros, carrera: value })
-                }
-              >
-                <SelectTrigger className="rounded-lg shadow-sm">
-                  <SelectValue placeholder="Selecciona una carrera" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todas las carreras</SelectItem>
-                  <SelectItem value="electronica">
-                    Ingeniería Electrónica
-                  </SelectItem>
-                  <SelectItem value="electrica">
-                    Ingeniería Eléctrica
-                  </SelectItem>
-                  <SelectItem value="industrial">
-                    Ingeniería Industrial
-                  </SelectItem>
-                  <SelectItem value="mecanica">Ingeniería Mecánica</SelectItem>
-                  <SelectItem value="logistica">
-                    Ingeniería en Logística
-                  </SelectItem>
-                  <SelectItem value="gestion">
-                    Ingeniería en Gestión Empresarial
-                  </SelectItem>
-                  <SelectItem value="tic">
-                    Ingeniería en Tecnologías de la Información y Comunicaciones
-                  </SelectItem>
+                  <SelectItem value="A">Sala 1</SelectItem>
+                  <SelectItem value="B">Sala 2</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -291,7 +248,7 @@ export function BuscadorEventos({
               <div>
                 <Label className="flex items-center gap-2 mb-2">
                   <Building2 className="w-4 h-4" />
-                  Auditorio
+                  Sala
                 </Label>
                 <Select
                   value={filtros.auditorio}
@@ -300,39 +257,12 @@ export function BuscadorEventos({
                   }
                 >
                   <SelectTrigger className="rounded-lg shadow-sm w-full">
-                    <SelectValue placeholder="Selecciona un auditorio" />
+                    <SelectValue placeholder="Selecciona una sala" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="todos">Todos</SelectItem>
-                    <SelectItem value="A">Auditorio A</SelectItem>
-                    <SelectItem value="B">Auditorio B</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label className="flex items-center gap-2 mb-2">
-                  <GraduationCap className="w-4 h-4" />
-                  Carrera
-                </Label>
-                <Select
-                  value={filtros.carrera}
-                  onValueChange={(value) =>
-                    setFiltros({ ...filtros, carrera: value })
-                  }
-                >
-                  <SelectTrigger className="rounded-lg shadow-sm w-full">
-                    <SelectValue placeholder="Selecciona una carrera" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="todos">Todas las carreras</SelectItem>
-                    <SelectItem value="electronica">Ingeniería Electrónica</SelectItem>
-                    <SelectItem value="electrica">Ingeniería Eléctrica</SelectItem>
-                    <SelectItem value="industrial">Ingeniería Industrial</SelectItem>
-                    <SelectItem value="mecanica">Ingeniería Mecánica</SelectItem>
-                    <SelectItem value="logistica">Ingeniería en Logística</SelectItem>
-                    <SelectItem value="gestion">Ingeniería en Gestión Empresarial</SelectItem>
-                    <SelectItem value="tic">Ingeniería en Tecnologías de la Información y Comunicaciones</SelectItem>
+                    <SelectItem value="A">Sala 1</SelectItem>
+                    <SelectItem value="B">Sala 2</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -417,7 +347,7 @@ export function BuscadorEventos({
             )}
             {filtros.auditorio !== "todos" && (
               <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full">
-                Auditorio {filtros.auditorio}
+                {obtenerNombreSala(filtros.auditorio)}
               </span>
             )}
             {filtros.fechaInicio && (
@@ -433,11 +363,6 @@ export function BuscadorEventos({
             {filtros.estado !== "todos" && (
               <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full">
                 Estado: {filtros.estado}
-              </span>
-            )}
-            {filtros.carrera !== "todos" && (
-              <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full">
-                Carrera: {filtros.carrera}
               </span>
             )}
           </div>

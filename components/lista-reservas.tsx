@@ -13,10 +13,13 @@ import {
   Download,
   CheckCircle2,
   Circle,
+  QrCode,
 } from "lucide-react";
+import QRCode from "qrcode";
+import { obtenerNombreSala } from "@/lib/utils";
 import type { Reserva, AsistenteRegistrado } from "@/app/page";
 import { BuscadorEventos, type FiltrosBusqueda } from "@/components/buscador-eventos";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
@@ -27,16 +30,6 @@ import {
   DialogTitle,
   DialogClose,
 } from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 
 type PropiedadesListaReservas = {
   reservas: Reserva[];
@@ -44,6 +37,7 @@ type PropiedadesListaReservas = {
   alEliminarAsistente: (
     reservaId: string,
     asistenteId: string,
+    source?: "reserva" | "qr",
   ) => Promise<boolean>;
   alActualizarAsistencia: (
     reservaId: string,
@@ -77,6 +71,31 @@ export function ListaReservas({
   const [reservaParaEliminar, setReservaParaEliminar] = useState<Reserva | null>(null);
   const [filtrosCompartidos, setFiltrosCompartidos] = useState<FiltrosBusqueda | null>(null);
   const [actualizandoAsistencia, setActualizandoAsistencia] = useState<Record<string, boolean>>({});
+  const [reservaQr, setReservaQr] = useState<Reserva | null>(null);
+  const [imagenQr, setImagenQr] = useState<string | null>(null);
+  const [errorQr, setErrorQr] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!reservaQr) {
+      setImagenQr(null);
+      setErrorQr(null);
+      return;
+    }
+
+    let cancelled = false;
+    const urlCheckIn = `${window.location.origin}/check-in/${encodeURIComponent(reservaQr.id)}`;
+    QRCode.toDataURL(urlCheckIn, { width: 320, margin: 2, errorCorrectionLevel: "M" })
+      .then((dataUrl) => {
+        if (!cancelled) setImagenQr(dataUrl);
+      })
+      .catch(() => {
+        if (!cancelled) setErrorQr("No se pudo generar el código QR.");
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [reservaQr]);
 
   const descargarReporte = (reserva: Reserva, asistentes: AsistenteRegistrado[]) => {
     const formatearFechaRegistro = (fechaRegistro: string) => {
@@ -97,12 +116,13 @@ export function ListaReservas({
       return `"${seguro.replace(/"/g, '""')}"`;
     };
     const filas = [
-      ["Conferencia", "Asistente", "Correo", "Asiento", "Fecha de registro", "Asistió"],
+      ["Conferencia", "Asistente", "Matrícula", "Correo", "Asiento", "Fecha de registro", "Asistió"],
       ...asistentes.map((asistente) => [
         reserva.titulo,
         asistente.nombre,
-        asistente.email,
-        asistente.numeroAsiento,
+        asistente.matricula || "",
+        asistente.email || "",
+        asistente.numeroAsiento ?? "",
         formatearFechaRegistro(asistente.fechaRegistro),
         asistente.asistio ? "Sí" : "No",
       ]),
@@ -144,7 +164,6 @@ export function ListaReservas({
             !reserva.organizador.toLowerCase().includes(query)
           ) return false;
           if (filtrosCompartidos.auditorio !== "todos" && reserva.auditorio !== filtrosCompartidos.auditorio) return false;
-          if (filtrosCompartidos.carrera !== "todos" && reserva.carrera !== filtrosCompartidos.carrera) return false;
           if (filtrosCompartidos.fechaInicio && reserva.fecha < filtrosCompartidos.fechaInicio) return false;
           if (filtrosCompartidos.fechaFin && reserva.fecha > filtrosCompartidos.fechaFin) return false;
         }
@@ -247,7 +266,7 @@ export function ListaReservas({
                             ? 'bg-orange-600/15 border-orange-500/30 text-orange-200'
                             : 'bg-purple-600/15 border-purple-500/30 text-purple-200'
                         }`}>
-                          Auditorio {reserva.auditorio}
+                          {obtenerNombreSala(reserva.auditorio)}
                         </span>
                         {restantes === 0 && (
                           <span className="text-[10px] uppercase font-bold bg-red-500/10 text-red-400 px-2 py-0.5 rounded">Agotado</span>
@@ -291,6 +310,20 @@ export function ListaReservas({
                     )}
                   </div>
 
+                  {esOrganizador && (
+                    <div className="mt-4 flex justify-end">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setReservaQr(reserva)}
+                        className="border-cyan-400/40 bg-cyan-950/30 text-cyan-100 hover:bg-cyan-900/50"
+                      >
+                        <QrCode className="mr-2 h-4 w-4" />
+                        Mostrar QR de check-in
+                      </Button>
+                    </div>
+                  )}
+
                   {/* Detalle de Asistentes expandible */}
                   {esOrganizador && (
                     <div className="mt-4 pt-4 border-t border-slate-800/50">
@@ -321,7 +354,14 @@ export function ListaReservas({
                             <div key={a.id} className="flex items-center justify-between p-2 rounded-lg bg-slate-900/50 border border-slate-800">
                               <div className="min-w-0">
                                 <p className="text-xs font-medium text-slate-200 truncate">{a.nombre}</p>
-                                <p className="text-[10px] text-muted truncate">{a.email}</p>
+                                {a.matricula ? (
+                                  <p className="text-[10px] text-muted truncate">Matrícula: {a.matricula}</p>
+                                ) : a.email ? (
+                                  <p className="text-[10px] text-muted truncate">{a.email}</p>
+                                ) : null}
+                                {a.numeroAsiento != null && (
+                                  <p className="text-[10px] text-muted">Asiento {a.numeroAsiento}</p>
+                                )}
                                 <p className={`text-[10px] ${a.asistio ? "text-emerald-300" : "text-slate-500"}`}>
                                   {a.asistio ? "Asistió" : "Pendiente de check-in"}
                                 </p>
@@ -352,7 +392,7 @@ export function ListaReservas({
                                   <Button
                                     variant="ghost"
                                     size="sm"
-                                    onClick={() => alEliminarAsistente(reserva.id, a.id)}
+                                    onClick={() => alEliminarAsistente(reserva.id, a.id, a.source)}
                                     aria-label={`Eliminar registro de ${a.nombre}`}
                                     className="h-7 w-7 p-0 hover:text-red-400"
                                   >
@@ -371,37 +411,115 @@ export function ListaReservas({
           })
         )}
       </div>
-      <AlertDialog
+      <Dialog open={Boolean(reservaQr)} onOpenChange={(open) => !open && setReservaQr(null)}>
+        <DialogContent
+          style={{
+            position: "fixed",
+            insetInline: "1rem",
+            top: "50%",
+            marginInline: "auto",
+            transform: "translateY(-50%)",
+            zIndex: 100,
+            maxHeight: "calc(100dvh - 2rem)",
+            overflowY: "auto",
+          }}
+          className="border-slate-700 bg-slate-950 text-slate-100 sm:max-w-md"
+        >
+          <DialogHeader>
+            <DialogTitle>QR de check-in</DialogTitle>
+            <DialogDescription className="text-slate-400">
+              {reservaQr?.titulo}. Los asistentes deben escanearlo desde la sala.
+            </DialogDescription>
+          </DialogHeader>
+          <div
+            style={{
+              width: "min(16rem, calc(100vw - 8rem), calc(100dvh - 14rem))",
+              aspectRatio: "1 / 1",
+            }}
+            className="mx-auto flex flex-col items-center justify-center rounded-lg bg-white p-3"
+          >
+            {imagenQr ? (
+              <img src={imagenQr} alt={`Código QR de check-in para ${reservaQr?.titulo}`} className="h-full w-full object-contain" />
+            ) : errorQr ? (
+              <p className="text-sm text-red-700">{errorQr}</p>
+            ) : (
+              <p className="text-sm text-slate-600">Generando código QR...</p>
+            )}
+          </div>
+          <DialogFooter>
+            {imagenQr && (
+              <a
+                href={imagenQr}
+                download={`check-in-${reservaQr?.id}.png`}
+                className="inline-flex h-9 items-center justify-center rounded-md bg-cyan-700 px-4 text-sm font-medium text-white hover:bg-cyan-600"
+              >
+                <Download className="mr-2 h-4 w-4" />
+                Descargar QR
+              </a>
+            )}
+            <DialogClose asChild>
+              <Button variant="outline">Cerrar</Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog
         open={Boolean(reservaParaEliminar)}
         onOpenChange={(open) => {
-          if (!open) setReservaParaEliminar(null);
+          if (!open && !isDeleting) setReservaParaEliminar(null);
         }}
       >
-        <AlertDialogContent className="border-red-400/20 bg-slate-950 text-slate-100">
-          <AlertDialogHeader>
-            <AlertDialogTitle>¿Eliminar esta reserva?</AlertDialogTitle>
-            <AlertDialogDescription className="text-slate-400">
+        <DialogContent
+          showCloseButton={!isDeleting}
+          style={{
+            position: "fixed",
+            insetInline: "1rem",
+            top: "50%",
+            marginInline: "auto",
+            transform: "translateY(-50%)",
+            zIndex: 100,
+            maxHeight: "calc(100dvh - 2rem)",
+            overflowY: "auto",
+          }}
+          className="border-red-400/20 bg-slate-950 text-slate-100"
+        >
+          <DialogHeader>
+            <DialogTitle>¿Eliminar esta reserva?</DialogTitle>
+            <DialogDescription className="text-slate-400">
               Se eliminará &quot;{reservaParaEliminar?.titulo}&quot; y esta acción no se puede deshacer.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setReservaParaEliminar(null)}>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={isDeleting}
+              onClick={() => setReservaParaEliminar(null)}
+            >
               Cancelar
-            </AlertDialogCancel>
-            <AlertDialogAction
+            </Button>
+            <Button
+              type="button"
+              disabled={isDeleting}
               className="bg-red-600 text-white hover:bg-red-700"
-              onClick={async () => {
+              onClick={async (event) => {
+                event.preventDefault();
                 if (!reservaParaEliminar) return;
                 const reserva = reservaParaEliminar;
-                setReservaParaEliminar(null);
-                await alEliminar(reserva.id, reserva.organizadorId);
+                setIsDeleting(true);
+                try {
+                  const deleted = await alEliminar(reserva.id, reserva.organizadorId);
+                  if (deleted) setReservaParaEliminar(null);
+                } finally {
+                  setIsDeleting(false);
+                }
               }}
             >
-              Eliminar
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+              {isDeleting ? "Eliminando..." : "Eliminar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }

@@ -127,10 +127,10 @@ export function Calendario({
           <div className="mb-3 grid grid-cols-[52px_minmax(0,1fr)_minmax(0,1fr)] gap-1.5 sm:grid-cols-[100px_1fr_1fr] sm:gap-3">
             <div className="font-semibold text-sm text-slate-400">Hora</div>
             <div className="truncate rounded-lg bg-[#f97316] py-2 text-center text-xs font-semibold text-white shadow-sm sm:text-sm">
-              <span className="sm:hidden">Aud. A</span><span className="hidden sm:inline">Auditorio A</span>
+              <span>Sala 1</span>
             </div>
             <div className="truncate rounded-lg bg-[#8b5cf6] py-2 text-center text-xs font-semibold text-white shadow-sm sm:text-sm">
-              <span className="sm:hidden">Aud. B</span><span className="hidden sm:inline">Auditorio B</span>
+              <span>Sala 2</span>
             </div>
           </div>
 

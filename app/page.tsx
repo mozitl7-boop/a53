@@ -52,8 +52,10 @@ export type AsistenteRegistrado = {
   id: string;
   reservaId: string;
   nombre: string;
-  email: string;
-  numeroAsiento: number;
+  email?: string | null;
+  matricula?: string | null;
+  source?: "reserva" | "qr";
+  numeroAsiento?: number | null;
   fechaRegistro: string;
   asistio?: boolean;
 };
@@ -241,7 +243,9 @@ export default function Page() {
                 reservaId: row.id_evento,
                 nombre: row.nombre || row.asistente_nombre || "",
                 email: row.email || row.asistente_email || "",
-                numeroAsiento: row.numero_orden || 0,
+                matricula: row.matricula || null,
+                source: row.source === "qr" ? "qr" : "reserva",
+                numeroAsiento: row.numero_orden || null,
                 fechaRegistro:
                   row.fecha_registro ||
                   row.fechaRegistro ||
@@ -294,7 +298,9 @@ export default function Page() {
           reservaId: reservaId || String(row.eventoId || row.reservaId || ""),
           nombre,
           email,
-          numeroAsiento,
+          matricula: row.matricula || null,
+          source: row.source === "qr" ? "qr" : "reserva",
+          numeroAsiento: row.source === "qr" ? null : numeroAsiento,
           fechaRegistro,
           asistio: Boolean(row.asistio),
         };
@@ -491,7 +497,9 @@ export default function Page() {
                     reservaId: row.id_evento,
                     nombre: row.nombre || row.asistente_nombre || "",
                     email: row.email || row.asistente_email || "",
-                    numeroAsiento: row.numero_orden || 0,
+                    matricula: row.matricula || null,
+                    source: row.source === "qr" ? "qr" : "reserva",
+                    numeroAsiento: row.numero_orden || null,
                     fechaRegistro:
                       row.fecha_registro ||
                       row.fechaRegistro ||
@@ -569,7 +577,11 @@ export default function Page() {
     }
   };
 
-  const eliminarAsistente = async (reservaId: string, asistenteId: string) => {
+  const eliminarAsistente = async (
+    reservaId: string,
+    asistenteId: string,
+    source: "reserva" | "qr" = "reserva"
+  ) => {
     try {
       // Determinar el identificador de llamada: dar preferencia al identificador del organizador de la reserva (valor del lado del servidor).
       // TEMP LOG: verificar que el handler del cliente se ejecute al hacer click
@@ -596,6 +608,7 @@ export default function Page() {
         body: JSON.stringify({
           registroId: asistenteId,
           usuario_id: callerId,
+          source,
         }),
       });
       const json = await res.json().catch(() => ({} as any));
@@ -605,6 +618,11 @@ export default function Page() {
           json.error || json
         );
         return false;
+      }
+
+      if (source === "qr") {
+        setAsistentesRegistrados((prev) => prev.filter((asistente) => asistente.id !== asistenteId));
+        return true;
       }
 
       // También recuperar registros para esta reserva desde el servidor para mantener la UI consistente
@@ -617,7 +635,9 @@ export default function Page() {
             reservaId: row.id_evento,
             nombre: row.nombre || row.asistente_nombre || "",
             email: row.email || row.asistente_email || "",
-            numeroAsiento: row.numero_orden || 0,
+            matricula: row.matricula || null,
+            source: row.source === "qr" ? "qr" : "reserva",
+            numeroAsiento: row.numero_orden || null,
             fechaRegistro:
               row.fecha_registro ||
               row.fechaRegistro ||
@@ -693,7 +713,7 @@ export default function Page() {
           return {
             exito: true,
             mensaje: `Asiento ${nuevoRegistro.numeroAsiento} asignado exitosamente`,
-            asiento: nuevoRegistro.numeroAsiento,
+            asiento: nuevoRegistro.numeroAsiento ?? undefined,
           };
         } catch (err: any) {
           console.error("Error registrando asistente:", err);
@@ -710,10 +730,16 @@ export default function Page() {
     asistio: boolean
   ) => {
     try {
+      const registro = asistentesRegistrados.find((asistente) => asistente.id === registroId);
+      const reserva = reservas.find((item) => item.id === reservaId);
+      const callerId = reserva?.organizadorId || currentUserId || null;
+      const devHeader: Record<string, string> = process.env.NODE_ENV !== "production"
+        ? { "x-usuario-id": String(callerId || "") }
+        : {};
       const response = await fetch(`/api/registros-asistentes/${reservaId}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ registroId, asistio }),
+        headers: { "Content-Type": "application/json", ...devHeader },
+        body: JSON.stringify({ registroId, asistio, source: registro?.source || "reserva", usuario_id: callerId }),
       });
       const result = await response.json();
       if (!response.ok || !result.success) {

@@ -1,6 +1,34 @@
 import { NextResponse } from "next/server";
 import supabase from "@/lib/supabaseServer";
 import { getUserFromRequest } from "@/lib/auth";
+import { obtenerNombreSala } from "@/lib/utils";
+
+async function verificarGestionEvento(request: Request, eventoId: string, body: any) {
+  const sessionUser = getUserFromRequest(request);
+  const devUserId = process.env.NODE_ENV !== "production"
+    ? request.headers.get("x-usuario-id") || body.usuario_id || null
+    : null;
+  const callerId = sessionUser?.id ? String(sessionUser.id) : devUserId;
+  const callerType = sessionUser?.tipo_usuario || null;
+  if (!callerId) {
+    return NextResponse.json({ success: false, error: "Inicia sesión para administrar la lista" }, { status: 401 });
+  }
+
+  const { data: evento, error } = await supabase
+    .from("eventos")
+    .select("*")
+    .eq("id", eventoId)
+    .maybeSingle();
+  if (error) throw error;
+  if (!evento) {
+    return NextResponse.json({ success: false, error: "Evento no encontrado" }, { status: 404 });
+  }
+  const ownerId = evento.id_organizador ?? evento.organizador_id ?? evento.organizer_id;
+  if (callerType !== "admin" && String(ownerId || "") !== callerId) {
+    return NextResponse.json({ success: false, error: "Solo el organizador del evento puede administrar la lista" }, { status: 403 });
+  }
+  return null;
+}
 
 /**
  * API GET /api/registros-asistentes/[eventoId] — obtener registros de asistentes
@@ -498,8 +526,8 @@ export async function POST(
       const fechaFormato = formatDateSpanish(rawFecha) || "Por confirmar";
       const horaFormato = formatTimeSpanish(rawHora) || "Por confirmar";
       const auditorioString = eventInfo && eventInfo.auditorio
-        ? `Auditorio ${eventInfo.auditorio}`
-        : "Auditorio no especificado";
+        ? obtenerNombreSala(String(eventInfo.auditorio))
+        : "Sala no especificada";
 
       const baseUrl =
         process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
@@ -616,6 +644,21 @@ export async function DELETE(
         { success: false, error: "registroId es requerido" },
         { status: 400 }
       );
+    }
+
+    if (body?.source === "qr") {
+      const authorizationError = await verificarGestionEvento(request, eventoId, body);
+      if (authorizationError) return authorizationError;
+      const { data, error } = await supabase
+        .from("asistencias_qr")
+        .delete()
+        .eq("id", registroId)
+        .eq("evento_id", eventoId)
+        .select("id")
+        .maybeSingle();
+      if (error) throw error;
+      if (!data) return NextResponse.json({ success: false, error: "Registro QR no encontrado" }, { status: 404 });
+      return NextResponse.json({ success: true, deleted: data });
     }
 
     // Authorization: prefer session-based user from cookie; fallback to header/body
@@ -779,6 +822,21 @@ export async function PATCH(
     const { registroId, asistio } = body;
     if (!registroId || typeof asistio !== "boolean") {
       return NextResponse.json({ success: false, error: "registroId y asistio son requeridos" }, { status: 400 });
+    }
+
+    if (body?.source === "qr") {
+      const authorizationError = await verificarGestionEvento(request, eventoId, body);
+      if (authorizationError) return authorizationError;
+      const { data, error } = await supabase
+        .from("asistencias_qr")
+        .update({ asistio })
+        .eq("id", registroId)
+        .eq("evento_id", eventoId)
+        .select("id,asistio")
+        .maybeSingle();
+      if (error) throw error;
+      if (!data) return NextResponse.json({ success: false, error: "Registro QR no encontrado" }, { status: 404 });
+      return NextResponse.json({ success: true, registro: data });
     }
 
     let updated: { id: string; asistio: boolean } | null = null;

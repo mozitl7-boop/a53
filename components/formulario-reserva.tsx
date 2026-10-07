@@ -370,7 +370,7 @@ export function FormularioReserva({
           
           {/* Selector de Auditorio */}
           <div className="md:col-span-2">
-            <Label className="text-lg font-bold mb-4 block text-white">Auditorio</Label>
+            <Label className="text-lg font-bold mb-4 block text-white">Sala</Label>
             <div className="grid grid-cols-2 gap-4">
               <button
                 type="button"
@@ -382,7 +382,7 @@ export function FormularioReserva({
                 }`}
               >
                 <div className="text-center">
-                  <div className="text-3xl font-black">A</div>
+                  <div className="text-xl font-bold">Sala 1</div>
                   <div className="text-xs uppercase tracking-widest mt-1">168 personas</div>
                 </div>
               </button>
@@ -396,7 +396,7 @@ export function FormularioReserva({
                 }`}
               >
                 <div className="text-center">
-                  <div className="text-3xl font-black">B</div>
+                  <div className="text-xl font-bold">Sala 2</div>
                   <div className="text-xs uppercase tracking-widest mt-1">168 personas</div>
                 </div>
               </button>

@@ -5,7 +5,8 @@ export async function sendMagicLinkEmail(
   email: string,
   token: string,
   tipo: "login" | "registro",
-  requestOrigin?: string | null
+  requestOrigin?: string | null,
+  returnTo?: string
 ) {
   const configuredUrl =
     process.env.NODE_ENV !== "production" && requestOrigin
@@ -16,7 +17,8 @@ export async function sendMagicLinkEmail(
         requestOrigin ||
         "http://localhost:3000";
   const appUrl = configuredUrl.replace(/\/$/, "");
-  const magicLink = `${appUrl}/auth/magic?token=${encodeURIComponent(token)}`;
+  const returnToParam = returnTo ? `&returnTo=${encodeURIComponent(returnTo)}` : "";
+  const magicLink = `${appUrl}/auth/magic?token=${encodeURIComponent(token)}${returnToParam}`;
 
   const subject =
     tipo === "registro"

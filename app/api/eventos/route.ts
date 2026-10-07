@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import supabase from "@/lib/supabaseServer";
 import { getUserFromRequest } from "@/lib/auth";
+import { obtenerNombreSala } from "@/lib/utils";
 
 /**
  * API GET /api/eventos — obtener todos los eventos
@@ -235,7 +236,7 @@ export async function POST(request: Request) {
     if (conflicto) {
       return NextResponse.json({
         success: false,
-        error: `El Auditorio ${auditorio_id} ya está reservado de ${String(conflicto.hora_inicio).slice(0, 5)} a ${String(conflicto.hora_fin).slice(0, 5)} para "${conflicto.titulo}"`,
+        error: `La ${obtenerNombreSala(String(auditorio_id))} ya está reservada de ${String(conflicto.hora_inicio).slice(0, 5)} a ${String(conflicto.hora_fin).slice(0, 5)} para "${conflicto.titulo}"`,
         conflict: conflicto,
       }, { status: 409 });
     }

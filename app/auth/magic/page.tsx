@@ -21,7 +21,7 @@ export default function MagicLinkPage() {
   useEffect(() => {
     let mounted = true;
 
-    const verifyToken = async (t: string | null) => {
+    const verifyToken = async (t: string | null, returnTo: string | null) => {
       if (!t) {
         if (!mounted) return;
         setError("Token no proporcionado");
@@ -48,7 +48,10 @@ export default function MagicLinkPage() {
         // Mostrar la pantalla de éxito brevemente antes de redirigir
         setLoading(false);
         setTimeout(() => {
-          router.push("/");
+          const safeReturnTo = returnTo?.startsWith("/") && !returnTo.startsWith("//") && !returnTo.includes("\\")
+            ? returnTo
+            : "/";
+          router.push(safeReturnTo);
         }, 800);
       } catch (err: any) {
         if (!mounted) return;
@@ -65,7 +68,7 @@ export default function MagicLinkPage() {
           : null;
       const t = params ? params.get("token") : null;
       setToken(t);
-      verifyToken(t);
+      verifyToken(t, params?.get("returnTo") || null);
     } catch (e) {
       setError("Error leyendo parámetros de la URL");
       setLoading(false);

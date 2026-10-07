@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useRealtimeSync } from "@/hooks/useRealtimeSync";
 import type { Reserva, AsistenteRegistrado } from "@/app/page";
+import { obtenerNombreSala } from "@/lib/utils";
 import { BuscadorEventos, type FiltrosBusqueda } from "@/components/buscador-eventos";
 import {
   CalendarIcon,
@@ -221,14 +222,6 @@ export function VistaAsistente({
           return false;
         }
 
-        // Filtro por carrera
-        if (
-          filtrosActivos.carrera !== "todos" &&
-          reserva.carrera !== filtrosActivos.carrera
-        ) {
-          return false;
-        }
-
         // Filtro por fecha inicio
         if (
           filtrosActivos.fechaInicio &&
@@ -399,7 +392,7 @@ export function VistaAsistente({
                         Asiento {asistente.numeroAsiento}
                       </Badge>
                       <Badge className={`rounded-full bg-none ${auditorioClasses} border px-2 py-1 text-[10px] font-semibold tracking-wide`}>
-                        Aud. {reserva.auditorio}
+                        {obtenerNombreSala(reserva.auditorio)}
                       </Badge>
                       <Badge className={`rounded-full bg-none ${estadoClasses} border px-2 py-1 text-[10px] font-semibold tracking-wide`}>
                         {estado}
@@ -522,7 +515,7 @@ export function VistaAsistente({
                             ? "bg-orange-600 border-orange-600 text-white"
                             : "bg-purple-600 border-purple-600 text-white"
                         }`}>
-                        Aud. {reserva.auditorio}
+                        {obtenerNombreSala(reserva.auditorio)}
                       </Badge>
                       {estaLleno(reserva) && (
                         <Badge className="bg-red-500/80 text-white font-semibold px-2.5 py-0.5 text-xs rounded-full">
@@ -548,7 +541,7 @@ export function VistaAsistente({
                       <div className="flex items-center gap-1.5 text-slate-300">
                         <MapPin className="w-3.5 h-3.5 text-rose-400 shrink-0" />
                       <span className="text-sm font-medium text-slate-300">
-                        Auditorio {reserva.auditorio}
+                        {obtenerNombreSala(reserva.auditorio)}
                       </span>
                     </div>
                   </div>
@@ -715,7 +708,7 @@ export function VistaAsistente({
                                 Auditorio
                               </p>
                               <p className="text-sm font-semibold text-slate-100">
-                                Aud. {reserva.auditorio}
+                                {obtenerNombreSala(reserva.auditorio)}
                               </p>
                             </div>
                             <div className="bg-slate-800 p-3.5 rounded-xl border border-slate-700">

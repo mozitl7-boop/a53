@@ -4,6 +4,7 @@ import type { Reserva } from "@/app/page";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { obtenerNombreSala } from "@/lib/utils";
 import {
   CalendarIcon,
   Clock,
@@ -56,7 +57,7 @@ export function EventoCard({
                 : "bg-purple-500/20 text-purple-300 border border-purple-500/30"
             }`}
           >
-            Aud. {reserva.auditorio}
+            {obtenerNombreSala(reserva.auditorio)}
           </Badge>
           {estaLleno && (
             <Badge className="bg-red-500/20 text-red-300 border border-red-500/30 rounded-full text-xs px-3 py-1 font-semibold">
@@ -80,7 +81,7 @@ export function EventoCard({
         </div>
         <div className="flex items-center gap-3 text-slate-300">
           <MapPin className="w-4 h-4 text-orange-400 flex-shrink-0" />
-          <span>Auditorio {reserva.auditorio}</span>
+          <span>{obtenerNombreSala(reserva.auditorio)}</span>
         </div>
       </div>
 

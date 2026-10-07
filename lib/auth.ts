@@ -1,9 +1,16 @@
 import crypto from "crypto";
 
 const TOKEN_NAME = "app_token";
-const SECRET =
-  process.env.AUTH_SECRET || process.env.JWT_SECRET || "dev-secret";
 const MAX_AGE = 60 * 60 * 24 * 7; // 7 days (seconds)
+
+function getSecret() {
+  const secret = process.env.AUTH_SECRET || process.env.JWT_SECRET;
+  if (secret) return secret;
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("AUTH_SECRET or JWT_SECRET must be configured in production");
+  }
+  return "dev-secret";
+}
 
 export type SessionUser = {
   id: string;
@@ -32,7 +39,7 @@ export function signToken(payload: SessionUser) {
   const encoded = `${base64url(JSON.stringify(header))}.${base64url(
     JSON.stringify(body)
   )}`;
-  const sig = hmacSha256(encoded, SECRET);
+  const sig = hmacSha256(encoded, getSecret());
   return `${encoded}.${base64url(sig)}`;
 }
 
@@ -42,7 +49,7 @@ export function verifyToken(token: string): SessionUser | null {
     if (parts.length !== 3) return null;
     const [encHeader, encBody, encSig] = parts;
     const unsigned = `${encHeader}.${encBody}`;
-    const expectedSig = base64url(hmacSha256(unsigned, SECRET));
+    const expectedSig = base64url(hmacSha256(unsigned, getSecret()));
     if (!crypto.timingSafeEqual(Buffer.from(expectedSig), Buffer.from(encSig)))
       return null;
     const bodyJson = Buffer.from(encBody, "base64").toString("utf8");

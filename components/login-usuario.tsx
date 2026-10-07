@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type UserShort = {
   id: string;
@@ -21,7 +20,6 @@ export function LoginUsuario({
   const [tab, setTab] = useState<"login" | "register">("login");
   const [email, setEmail] = useState("");
   const [nombre, setNombre] = useState("");
-  const [tipoUsuario, setTipoUsuario] = useState("asistente");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -57,7 +55,10 @@ export function LoginUsuario({
       const res = await fetch(`/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({
+          email,
+          returnTo: new URLSearchParams(window.location.search).get("returnTo"),
+        }),
       });
       const j = await res.json();
       if (!res.ok) {
@@ -87,7 +88,7 @@ export function LoginUsuario({
       const res = await fetch(`/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nombre, email, tipo_usuario: tipoUsuario }),
+        body: JSON.stringify({ nombre, email, tipo_usuario: "asistente" }),
       });
       const j = await res.json();
       if (!res.ok) {
@@ -199,19 +200,6 @@ export function LoginUsuario({
                       className="w-full border-[#1e324d] bg-[#111c2d] text-white placeholder:text-slate-500 focus-visible:border-[#f43f5e] focus-visible:ring-[#f43f5e]/30"
                     />
                     <p className="text-sm text-slate-300">Te enviaremos un acceso directo a tu bandeja de entrada.</p>
-                  </div>
-
-                  <div className="flex flex-col gap-2 w-full">
-                    <Label>Tipo</Label>
-                    <Select value={tipoUsuario} onValueChange={setTipoUsuario}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Asistente u Organizador" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="asistente">Asistente</SelectItem>
-                        <SelectItem value="organizador">Organizador</SelectItem>
-                      </SelectContent>
-                    </Select>
                   </div>
 
                   <Button

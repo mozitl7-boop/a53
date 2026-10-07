@@ -99,7 +99,7 @@ export function EstadoAuditorio({
                 <Building2 className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-white">Auditorio A</h3>
+                <h3 className="text-xl font-bold text-white">Sala 1</h3>
                 <div className="flex items-center gap-1.5 text-xs mt-1 text-white/90">
                   <Users className="w-4 h-4 text-white" />
                   <span>
@@ -161,7 +161,7 @@ export function EstadoAuditorio({
                 <Building2 className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h3 className="text-xl font-bold">Auditorio B</h3>
+                <h3 className="text-xl font-bold">Sala 2</h3>
                 <div className="flex items-center gap-1.5 text-xs mt-1 text-white/90">
                   <Users className="w-4 h-4 text-white" />
                   <span>
