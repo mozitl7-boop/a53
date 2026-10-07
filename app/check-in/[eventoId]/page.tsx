@@ -62,7 +62,7 @@ export default function CheckInPage() {
           <>
             <QrCode className="mx-auto h-10 w-10 text-cyan-300" />
             <h1 className="mt-5 text-2xl font-semibold">Pase de lista</h1>
-            <p className="mt-2 text-sm text-slate-400">Registra tu asistencia con tu nombre y matrícula.</p>
+            <p className="mt-2 text-sm text-slate-400">Registra tu asistencia con tu nombre y número de control.</p>
             <form onSubmit={registrarAsistencia} className="mt-6 space-y-4 text-left">
               <label htmlFor="check-in-name" className="block text-sm font-medium text-slate-200">
                 Nombre completo
@@ -80,7 +80,7 @@ export default function CheckInPage() {
                 className="h-11 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 text-base text-white outline-none placeholder:text-slate-500 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20"
               />
               <label htmlFor="check-in-matricula" className="block text-sm font-medium text-slate-200">
-                Matrícula
+                Número de Control
               </label>
               <input
                 id="check-in-matricula"
@@ -91,7 +91,7 @@ export default function CheckInPage() {
                 maxLength={40}
                 value={matricula}
                 onChange={(event) => setMatricula(event.target.value.toUpperCase())}
-                placeholder="Tu matrícula"
+                placeholder="Tu número de control"
                 className="h-11 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 text-base uppercase text-white outline-none placeholder:normal-case placeholder:text-slate-500 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20"
               />
               {error && (

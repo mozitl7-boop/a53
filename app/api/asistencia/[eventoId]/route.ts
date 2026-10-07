@@ -29,7 +29,7 @@ export async function POST(
     return NextResponse.json({ success: false, error: "Escribe tu nombre completo (2 a 120 caracteres)." }, { status: 400 });
   }
   if (!/^[\p{L}\p{N}][\p{L}\p{N}-]{1,39}$/u.test(matricula)) {
-    return NextResponse.json({ success: false, error: "Escribe una matrícula válida (2 a 40 letras o números)." }, { status: 400 });
+    return NextResponse.json({ success: false, error: "Escribe un número de control válido (2 a 40 letras o números)." }, { status: 400 });
   }
 
   const forwardedFor = request.headers.get("x-forwarded-for");
@@ -59,7 +59,7 @@ export async function POST(
     if (existing) {
       const sameName = String(existing.nombre).trim().toLocaleLowerCase("es-MX") === nombre.toLocaleLowerCase("es-MX");
       if (!sameName) {
-        return NextResponse.json({ success: false, error: "Esa matrícula ya fue registrada con otro nombre." }, { status: 409 });
+        return NextResponse.json({ success: false, error: "Ese número de control ya fue registrado con otro nombre." }, { status: 409 });
       }
       if (existing.asistio) {
         return NextResponse.json({ success: true, asistio: true, alreadyCheckedIn: true });
@@ -89,7 +89,7 @@ export async function POST(
       .single();
     if (createError) {
       if (createError.code === "23505") {
-        return NextResponse.json({ success: false, error: "Esta matrícula acaba de registrarse. Verifica con el organizador si necesitas corregir el nombre." }, { status: 409 });
+        return NextResponse.json({ success: false, error: "Ese número de control acaba de registrarse. Verifica con el organizador si necesitas corregir el nombre." }, { status: 409 });
       }
       if (createError.code === "PGRST205" || createError.code === "42P01") {
         return NextResponse.json({ success: false, error: "El pase de lista todavía no está configurado en la base de datos." }, { status: 503 });

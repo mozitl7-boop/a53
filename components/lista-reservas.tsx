@@ -116,7 +116,7 @@ export function ListaReservas({
       return `"${seguro.replace(/"/g, '""')}"`;
     };
     const filas = [
-      ["Conferencia", "Asistente", "Matrícula", "Correo", "Asiento", "Fecha de registro", "Asistió"],
+      ["Conferencia", "Asistente", "Número de control", "Correo", "Asiento", "Fecha de registro", "Asistió"],
       ...asistentes.map((asistente) => [
         reserva.titulo,
         asistente.nombre,
@@ -355,7 +355,7 @@ export function ListaReservas({
                               <div className="min-w-0">
                                 <p className="text-xs font-medium text-slate-200 truncate">{a.nombre}</p>
                                 {a.matricula ? (
-                                  <p className="text-[10px] text-muted truncate">Matrícula: {a.matricula}</p>
+                                  <p className="text-[10px] text-muted truncate">Número de control: {a.matricula}</p>
                                 ) : a.email ? (
                                   <p className="text-[10px] text-muted truncate">{a.email}</p>
                                 ) : null}
