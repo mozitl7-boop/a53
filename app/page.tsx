@@ -123,21 +123,9 @@ export default function Page() {
         if (action === "filtros") {
           setOrganizadorVista("lista");
           setOrganizadorFiltrosSolicitud((previous) => previous + 1);
-          window.requestAnimationFrame(() => {
-            document.getElementById("organizador-filtros")?.scrollIntoView({
-              behavior: "smooth",
-              block: "start",
-            });
-          });
         }
         if (action === "crear") {
           setOpenReservaMobile(true);
-          window.requestAnimationFrame(() => {
-            document.getElementById("crear-reserva-mobile")?.scrollIntoView({
-              behavior: "smooth",
-              block: "start",
-            });
-          });
         }
       } else {
         if (typeof window === "undefined") return;
@@ -159,6 +147,17 @@ export default function Page() {
     },
     [modoUsuario],
   );
+
+  useEffect(() => {
+    if (!openReservaMobile) return;
+    const frame = window.requestAnimationFrame(() => {
+      document.getElementById("crear-reserva-mobile")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [openReservaMobile]);
 
   useEffect(() => {
     if (modoUsuario !== "asistente" || typeof IntersectionObserver === "undefined") return;
@@ -805,7 +804,7 @@ export default function Page() {
 
   return (
     <div className="min-h-screen min-w-0 overflow-x-hidden bg-[#020617] font-sans text-slate-200 selection:bg-primary/30">
-      <main className="mx-auto min-w-0 max-w-7xl overflow-x-hidden px-3 py-5 sm:px-6 sm:py-8">
+      <main className="mx-auto min-w-0 max-w-7xl overflow-x-hidden px-3 pt-5 pb-[calc(6.5rem+env(safe-area-inset-bottom))] sm:px-6 sm:pt-8 md:pb-8">
         {modoUsuario === "organizador" ? (
           <div className="grid min-w-0 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_560px] xl:gap-8">
             {/* COLUMNA IZQUIERDA: CALENDARIO Y LISTA */}
@@ -872,7 +871,7 @@ export default function Page() {
               </Card>
 
               {openReservaMobile && (
-                <div id="crear-reserva-mobile" className="mx-auto w-full max-w-4xl min-w-0 overflow-x-hidden rounded-2xl border border-cyan-400/30 bg-slate-950/95 p-2 shadow-2xl sm:p-3">
+                <div id="crear-reserva-mobile" className="mx-auto flex max-h-[calc(100dvh-13rem)] w-full max-w-4xl min-w-0 scroll-mt-20 flex-col overflow-x-hidden rounded-2xl border border-cyan-400/30 bg-slate-950/95 p-2 shadow-2xl sm:p-3">
                   <div className="mb-2 flex items-center justify-between gap-3 px-2">
                     <div>
                       <h2 className="text-lg font-semibold text-white">Crear reserva</h2>
@@ -887,7 +886,7 @@ export default function Page() {
                       Cerrar
                     </Button>
                   </div>
-                  <div className="min-w-0 max-h-[calc(100dvh-10rem)] overflow-x-hidden overflow-y-auto overscroll-contain px-0 pb-16">
+                  <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain px-0 pb-24">
                     <FormularioReserva
                       alEnviar={(reserva) => {
                         agregarReserva(reserva);
@@ -944,7 +943,7 @@ export default function Page() {
       </main>
       <BottomNavigation
         role={modoUsuario}
-        active={modoUsuario === "organizador" ? organizadorVista : asistenteSeccion}
+        active={modoUsuario === "organizador" ? (openReservaMobile ? "crear" : organizadorVista) : asistenteSeccion}
         onAction={handleBottomNavAction}
       />
     </div>

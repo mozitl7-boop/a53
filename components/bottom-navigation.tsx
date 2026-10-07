@@ -12,6 +12,7 @@ type BottomNavigationProps = {
 const navigationMap = {
   organizador: [
     { id: "crear", label: "Crear", icon: PlusCircle },
+    { id: "lista", label: "Lista", icon: ClipboardList },
     { id: "calendario", label: "Agenda", icon: CalendarDays },
     { id: "filtros", label: "Filtros", icon: Filter },
   ],
@@ -26,8 +27,8 @@ export function BottomNavigation({ role, active, onAction }: BottomNavigationPro
   const items = navigationMap[role];
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-700/80 bg-slate-950/95 px-3 py-2 backdrop-blur-xl shadow-[0_-20px_50px_-35px_rgba(0,0,0,0.65)] md:hidden">
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-2">
+    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-700/80 bg-slate-950/95 px-2 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] backdrop-blur-xl shadow-[0_-20px_50px_-35px_rgba(0,0,0,0.65)] md:hidden">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-1">
         {items.map((item) => {
           const Icon = item.icon;
           const isActive = active === item.id;
@@ -37,7 +38,7 @@ export function BottomNavigation({ role, active, onAction }: BottomNavigationPro
               type="button"
               onClick={() => onAction(item.id)}
               className={cn(
-                "group flex flex-1 flex-col items-center justify-center rounded-3xl px-3 py-2 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/70",
+                "group flex min-h-12 min-w-0 flex-1 flex-col items-center justify-center rounded-lg px-1 py-1.5 text-[11px] font-semibold leading-tight transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/70",
                 isActive
                   ? "bg-cyan-500/15 text-cyan-100"
                   : "text-slate-300 hover:bg-slate-800/80 hover:text-white",

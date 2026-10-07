@@ -179,7 +179,7 @@ export function ListaReservas({
   }, [reservas, mostrarArchivados, onlyWithAvailability, asistentesRegistrados, filtrosCompartidos]);
 
   return (
-    <section className="mx-auto w-full max-w-6xl max-h-[calc(100vh-120px)] overflow-hidden rounded-3xl border border-slate-800 bg-slate-950/95 shadow-2xl flex flex-col">
+    <section className="mx-auto flex max-h-[calc(100dvh-10rem)] w-full max-w-6xl flex-col overflow-hidden rounded-3xl border border-slate-800 bg-slate-950/95 shadow-2xl md:max-h-[calc(100vh-120px)]">
       {/* Header */}
       <div className="flex items-center justify-between p-5 border-b border-slate-800 bg-slate-900/95">
         <div className="flex items-center gap-3">
@@ -231,7 +231,7 @@ export function ListaReservas({
       </div>
 
       {/* Contenido con Scrollbar Personalizada */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 
+      <div className="flex-1 space-y-4 overflow-y-auto overscroll-contain p-4 pb-24 md:pb-4 
         scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent hover:scrollbar-thumb-slate-600">
         {filteredReservas.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-64 border-2 border-dashed border-slate-800 rounded-3xl bg-slate-900/80">
@@ -415,11 +415,11 @@ export function ListaReservas({
         <DialogContent
           style={{
             position: "fixed",
-            insetInline: "1rem",
+            left: "50%",
             top: "50%",
-            marginInline: "auto",
-            transform: "translateY(-50%)",
+            translate: "-50% -50%",
             zIndex: 100,
+            width: "calc(100vw - 2rem)",
             maxHeight: "calc(100dvh - 2rem)",
             overflowY: "auto",
           }}
@@ -433,7 +433,7 @@ export function ListaReservas({
           </DialogHeader>
           <div
             style={{
-              width: "min(16rem, calc(100vw - 8rem), calc(100dvh - 14rem))",
+              width: "min(16rem, calc(100vw - 7rem), calc(100dvh - 15rem))",
               aspectRatio: "1 / 1",
             }}
             className="mx-auto flex flex-col items-center justify-center rounded-lg bg-white p-3"
@@ -473,11 +473,11 @@ export function ListaReservas({
           showCloseButton={!isDeleting}
           style={{
             position: "fixed",
-            insetInline: "1rem",
+            left: "50%",
             top: "50%",
-            marginInline: "auto",
-            transform: "translateY(-50%)",
+            translate: "-50% -50%",
             zIndex: 100,
+            width: "calc(100vw - 2rem)",
             maxHeight: "calc(100dvh - 2rem)",
             overflowY: "auto",
           }}
