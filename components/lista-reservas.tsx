@@ -16,6 +16,7 @@ import {
   QrCode,
 } from "lucide-react";
 import QRCode from "qrcode";
+import * as XLSX from "@e965/xlsx";
 import { obtenerNombreSala } from "@/lib/utils";
 import type { Reserva, AsistenteRegistrado } from "@/app/page";
 import { BuscadorEventos, type FiltrosBusqueda } from "@/components/buscador-eventos";
@@ -97,7 +98,7 @@ export function ListaReservas({
     };
   }, [reservaQr]);
 
-  const descargarReporte = (reserva: Reserva, asistentes: AsistenteRegistrado[]) => {
+  const descargarReporte = async (reserva: Reserva, asistentes: AsistenteRegistrado[]) => {
     const formatearFechaRegistro = (fechaRegistro: string) => {
       const fecha = new Date(fechaRegistro);
       if (Number.isNaN(fecha.getTime())) return fechaRegistro;
@@ -110,31 +111,39 @@ export function ListaReservas({
         fechaGmtMenos6.getUTCHours()
       )}:${dosDigitos(fechaGmtMenos6.getUTCMinutes())}`;
     };
-    const escapar = (valor: string | number) => {
-      const texto = String(valor);
-      const seguro = /^[=+\-@]/.test(texto) ? `'${texto}` : texto;
-      return `"${seguro.replace(/"/g, '""')}"`;
-    };
-    const filas = [
-      ["Conferencia", "Asistente", "Número de control", "Correo", "Asiento", "Fecha de registro", "Asistió"],
-      ...asistentes.map((asistente) => [
-        reserva.titulo,
-        asistente.nombre,
-        asistente.matricula || "",
-        asistente.email || "",
-        asistente.numeroAsiento ?? "",
-        formatearFechaRegistro(asistente.fechaRegistro),
-        asistente.asistio ? "Sí" : "No",
-      ]),
-    ];
-    const contenido = filas.map((fila) => fila.map(escapar).join(",")).join("\r\n");
-    const archivo = new Blob([`\uFEFF${contenido}`], { type: "text/csv;charset=utf-8" });
-    const url = URL.createObjectURL(archivo);
-    const enlace = document.createElement("a");
-    enlace.href = url;
-    enlace.download = `reporte-${reserva.titulo.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}-${reserva.fecha}.csv`;
-    enlace.click();
-    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    try {
+      const hoja = XLSX.utils.aoa_to_sheet([
+        ["Conferencia", "Asistente", "Número de control", "Correo", "Fecha de registro"],
+        ...asistentes.map((asistente) => [
+          reserva.titulo,
+          asistente.nombre,
+          asistente.matricula || "",
+          asistente.email || "",
+          formatearFechaRegistro(asistente.fechaRegistro),
+        ]),
+      ]);
+      hoja["!cols"] = [{ wch: 36 }, { wch: 30 }, { wch: 22 }, { wch: 32 }, { wch: 22 }];
+
+      const libro = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(libro, hoja, "Asistentes");
+      const contenido = XLSX.write(libro, { bookType: "xlsx", type: "array" });
+      const archivo = new Blob([contenido], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const url = URL.createObjectURL(archivo);
+      const enlace = document.createElement("a");
+      enlace.href = url;
+      enlace.download = `reporte-${reserva.titulo.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}-${reserva.fecha}.xlsx`;
+      enlace.click();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (error) {
+      console.error("Error generando reporte XLSX:", error);
+      toast({
+        title: "No se pudo generar el reporte",
+        description: "Inténtalo de nuevo en unos momentos.",
+        variant: "destructive",
+      });
+    }
   };
 
   const formatearFecha = (textoFecha?: string | null) => {
@@ -319,7 +328,7 @@ export function ListaReservas({
                         className="border-cyan-400/40 bg-cyan-950/30 text-cyan-100 hover:bg-cyan-900/50"
                       >
                         <QrCode className="mr-2 h-4 w-4" />
-                        Mostrar QR de check-in
+                        Mostrar QR de conferencia
                       </Button>
                     </div>
                   )}
@@ -338,7 +347,7 @@ export function ListaReservas({
                           className="border-slate-700 bg-slate-900 text-slate-200 hover:bg-slate-800"
                         >
                           <Download className="mr-2 h-4 w-4" />
-                          Descargar reporte CSV
+                          Descargar reporte
                         </Button>
                       </div>
                       <details className="group/details">
@@ -413,33 +422,45 @@ export function ListaReservas({
       </div>
       <Dialog open={Boolean(reservaQr)} onOpenChange={(open) => !open && setReservaQr(null)}>
         <DialogContent
+          showCloseButton={false}
           style={{
             position: "fixed",
-            left: "50%",
-            top: "50%",
-            translate: "-50% -50%",
+            transform: "none",
+            translate: "none",
+            insetBlock: "max(0.75rem, env(safe-area-inset-top))",
+            insetInline: "max(0.75rem, env(safe-area-inset-left))",
+            right: "max(0.75rem, env(safe-area-inset-right))",
+            bottom: "max(0.75rem, env(safe-area-inset-bottom))",
+            margin: "auto",
+            minWidth: 0,
+            height: "fit-content",
             zIndex: 100,
-            width: "calc(100vw - 2rem)",
-            maxHeight: "calc(100dvh - 2rem)",
+            width: "auto",
+            maxWidth: "28rem",
+            maxHeight: "calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 1.5rem)",
+            gridTemplateColumns: "minmax(0, 1fr)",
             overflowY: "auto",
+            overflowX: "hidden",
+            overscrollBehavior: "contain",
           }}
-          className="border-slate-700 bg-slate-950 text-slate-100 sm:max-w-md"
+          className="border-slate-700 bg-slate-950 p-4 text-slate-100 sm:p-6"
         >
           <DialogHeader>
-            <DialogTitle>QR de check-in</DialogTitle>
+            <DialogTitle>QR para conferencia:</DialogTitle>
             <DialogDescription className="text-slate-400">
-              {reservaQr?.titulo}. Los asistentes deben escanearlo desde la sala.
+              {reservaQr?.titulo} | {reservaQr?.organizador}. <br/> Los asistentes deben escanearlo para registrar su asistencia.
             </DialogDescription>
           </DialogHeader>
           <div
             style={{
-              width: "min(16rem, calc(100vw - 7rem), calc(100dvh - 15rem))",
+              width: "min(16rem, calc(100vw - 5rem), calc(100dvh - 17rem))",
               aspectRatio: "1 / 1",
+              maxWidth: "100%",
             }}
             className="mx-auto flex flex-col items-center justify-center rounded-lg bg-white p-3"
           >
             {imagenQr ? (
-              <img src={imagenQr} alt={`Código QR de check-in para ${reservaQr?.titulo}`} className="h-full w-full object-contain" />
+              <img src={imagenQr} alt={`Código QR para conferencia: ${reservaQr?.titulo}`} className="h-full w-full object-contain" />
             ) : errorQr ? (
               <p className="text-sm text-red-700">{errorQr}</p>
             ) : (
@@ -451,14 +472,14 @@ export function ListaReservas({
               <a
                 href={imagenQr}
                 download={`check-in-${reservaQr?.id}.png`}
-                className="inline-flex h-9 items-center justify-center rounded-md bg-cyan-700 px-4 text-sm font-medium text-white hover:bg-cyan-600"
+                className="inline-flex h-9 w-full items-center justify-center rounded-md bg-cyan-700 px-4 text-sm font-medium text-white hover:bg-cyan-600 sm:w-auto"
               >
                 <Download className="mr-2 h-4 w-4" />
                 Descargar QR
               </a>
             )}
             <DialogClose asChild>
-              <Button variant="outline">Cerrar</Button>
+              <Button className="w-full sm:w-auto" variant="outline">Cerrar</Button>
             </DialogClose>
           </DialogFooter>
         </DialogContent>
